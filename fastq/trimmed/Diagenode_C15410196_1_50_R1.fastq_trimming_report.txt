@@ -1,0 +1,129 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Diagenode_C15410196_1_50_R1.fastq
+Trimming mode: paired-end
+Trim Galore version: 0.6.6
+Cutadapt version: 3.3
+Number of cores used for trimming: 1
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Using Nextera adapter for trimming (count: 110063). Second best hit was smallRNA (count: 1)
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.3 with Python 3.8.8
+Command line parameters: -j 1 -e 0.1 -q 20 -O 1 -a CTGTCTCTTATA /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Diagenode_C15410196_1_50_R1.fastq
+Processing reads on 1 core in single-end mode ...
+Finished in 1970.91 s (22 µs/read; 2.77 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:              91,148,041
+Reads with adapters:                50,059,795 (54.9%)
+Reads written (passing filters):    91,148,041 (100.0%)
+
+Total basepairs processed: 6,793,509,588 bp
+Quality-trimmed:              13,507,137 bp (0.2%)
+Total written (filtered):  6,446,835,129 bp (94.9%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 50059795 times
+
+No. of allowed errors:
+1-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 17.2%
+  C: 36.3%
+  G: 25.0%
+  T: 21.5%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	26513267	22787010.2	0	26513267
+2	6929124	5696752.6	0	6929124
+3	2680547	1424188.1	0	2680547
+4	820038	356047.0	0	820038
+5	440761	89011.8	0	440761
+6	276201	22252.9	0	276201
+7	287845	5563.2	0	287845
+8	303473	1390.8	0	303473
+9	785819	347.7	0	783742 2077
+10	26174	86.9	1	17767 8407
+11	1051505	21.7	1	1029899 21606
+12	20730	5.4	1	16298 4432
+13	919369	5.4	1	898613 20756
+14	11124	5.4	1	8617 2507
+15	604965	5.4	1	590975 13990
+16	9444	5.4	1	6524 2920
+17	246620	5.4	1	240389 6231
+18	266022	5.4	1	259155 6867
+19	337283	5.4	1	329077 8206
+20	424996	5.4	1	414442 10554
+21	510268	5.4	1	493442 16826
+22	1561795	5.4	1	1527816 33979
+23	8978	5.4	1	7611 1367
+24	13270	5.4	1	11701 1569
+25	359920	5.4	1	351071 8849
+26	304329	5.4	1	294992 9337
+27	419002	5.4	1	406895 12107
+28	44352	5.4	1	38956 5396
+29	297393	5.4	1	285215 12178
+30	1502638	5.4	1	1469938 32700
+31	11969	5.4	1	10263 1706
+32	5726	5.4	1	4521 1205
+33	26801	5.4	1	22283 4518
+34	381757	5.4	1	372427 9330
+35	469732	5.4	1	459730 10002
+36	258264	5.4	1	252527 5737
+37	2585	5.4	1	1949 636
+38	5527	5.4	1	4749 778
+39	115599	5.4	1	112630 2969
+40	117515	5.4	1	113033 4482
+41	241790	5.4	1	235240 6550
+42	130185	5.4	1	126599 3586
+43	57451	5.4	1	55163 2288
+44	61189	5.4	1	59840 1349
+45	54818	5.4	1	52882 1936
+46	38329	5.4	1	36315 2014
+47	23538	5.4	1	22326 1212
+48	15261	5.4	1	14021 1240
+49	16175	5.4	1	15718 457
+50	3868	5.4	1	215 3653
+51	3919	5.4	1	2326 1593
+52	2745	5.4	1	2404 341
+53	3160	5.4	1	1479 1681
+54	868	5.4	1	657 211
+55	2261	5.4	1	1012 1249
+56	1215	5.4	1	522 693
+57	1354	5.4	1	346 1008
+58	894	5.4	1	41 853
+59	1469	5.4	1	421 1048
+60	3831	5.4	1	286 3545
+61	887	5.4	1	281 606
+62	1458	5.4	1	792 666
+63	1153	5.4	1	150 1003
+64	401	5.4	1	37 364
+65	1079	5.4	1	151 928
+66	2094	5.4	1	1164 930
+67	2717	5.4	1	745 1972
+68	2428	5.4	1	266 2162
+69	192	5.4	1	141 51
+70	247	5.4	1	142 105
+71	1411	5.4	1	823 588
+72	2964	5.4	1	1117 1847
+73	897	5.4	1	149 748
+74	4673	5.4	1	299 4374
+75	147	5.4	1	0 147
+
+RUN STATISTICS FOR INPUT FILE: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Diagenode_C15410196_1_50_R1.fastq
+=============================================
+91148041 sequences processed in total
+

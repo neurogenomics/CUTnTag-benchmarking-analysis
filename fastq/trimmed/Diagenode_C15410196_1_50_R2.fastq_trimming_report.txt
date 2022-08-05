@@ -1,0 +1,132 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Diagenode_C15410196_1_50_R2.fastq
+Trimming mode: paired-end
+Trim Galore version: 0.6.6
+Cutadapt version: 3.3
+Number of cores used for trimming: 1
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Using Nextera adapter for trimming (count: 110063). Second best hit was smallRNA (count: 1)
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.3 with Python 3.8.8
+Command line parameters: -j 1 -e 0.1 -q 20 -O 1 -a CTGTCTCTTATA /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Diagenode_C15410196_1_50_R2.fastq
+Processing reads on 1 core in single-end mode ...
+Finished in 1931.52 s (21 µs/read; 2.83 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:              91,148,041
+Reads with adapters:                51,057,314 (56.0%)
+Reads written (passing filters):    91,148,041 (100.0%)
+
+Total basepairs processed: 6,796,203,646 bp
+Quality-trimmed:              40,434,888 bp (0.6%)
+Total written (filtered):  6,429,649,237 bp (94.6%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 51057314 times
+
+No. of allowed errors:
+1-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 16.4%
+  C: 37.7%
+  G: 22.4%
+  T: 23.4%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	27409790	22787010.2	0	27409790
+2	7264469	5696752.6	0	7264469
+3	2714920	1424188.1	0	2714920
+4	853566	356047.0	0	853566
+5	374205	89011.8	0	374205
+6	297259	22252.9	0	297259
+7	289305	5563.2	0	289305
+8	350234	1390.8	0	350234
+9	932571	347.7	0	931297 1274
+10	9770	86.9	1	3476 6294
+11	1069114	21.7	1	1044752 24362
+12	12636	5.4	1	7726 4910
+13	781062	5.4	1	764337 16725
+14	5242	5.4	1	3167 2075
+15	515598	5.4	1	503820 11778
+16	4118	5.4	1	2040 2078
+17	259057	5.4	1	251097 7960
+18	304929	5.4	1	297804 7125
+19	425319	5.4	1	412908 12411
+20	1008816	5.4	1	985962 22854
+21	10210	5.4	1	7010 3200
+22	583298	5.4	1	568932 14366
+23	494094	5.4	1	482006 12088
+24	390584	5.4	1	381549 9035
+25	298780	5.4	1	290705 8075
+26	226332	5.4	1	219182 7150
+27	198706	5.4	1	193423 5283
+28	237362	5.4	1	229775 7587
+29	650753	5.4	1	635568 15185
+30	9697	5.4	1	7763 1934
+31	470963	5.4	1	458135 12828
+32	1136926	5.4	1	1110801 26125
+33	4046	5.4	1	2763 1283
+34	7702	5.4	1	6292 1410
+35	230291	5.4	1	224552 5739
+36	275400	5.4	1	268931 6469
+37	5248	5.4	1	3918 1330
+38	112061	5.4	1	109211 2850
+39	120648	5.4	1	117763 2885
+40	360355	5.4	1	353749 6606
+41	2241	5.4	1	1408 833
+42	4982	5.4	1	3325 1657
+43	117683	5.4	1	115215 2468
+44	67232	5.4	1	65581 1651
+45	106200	5.4	1	103533 2667
+46	1571	5.4	1	278 1293
+47	1123	5.4	1	88 1035
+48	597	5.4	1	14 583
+49	3443	5.4	1	67 3376
+50	1135	5.4	1	119 1016
+51	3133	5.4	1	2410 723
+52	4074	5.4	1	1415 2659
+53	1422	5.4	1	952 470
+54	3132	5.4	1	1106 2026
+55	1069	5.4	1	401 668
+56	1070	5.4	1	493 577
+57	1549	5.4	1	226 1323
+58	909	5.4	1	212 697
+59	4042	5.4	1	458 3584
+60	1066	5.4	1	213 853
+61	1392	5.4	1	913 479
+62	899	5.4	1	318 581
+63	1018	5.4	1	172 846
+64	775	5.4	1	405 370
+65	1526	5.4	1	21 1505
+66	1475	5.4	1	743 732
+67	4060	5.4	1	1165 2895
+68	412	5.4	1	11 401
+69	520	5.4	1	197 323
+70	682	5.4	1	241 441
+71	2517	5.4	1	1780 737
+72	3079	5.4	1	228 2851
+73	368	5.4	1	210 158
+74	5453	5.4	1	4330 1123
+75	29	5.4	1	1 28
+
+RUN STATISTICS FOR INPUT FILE: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Diagenode_C15410196_1_50_R2.fastq
+=============================================
+91148041 sequences processed in total
+
+Total number of sequences analysed for the sequence pair length validation: 91148041
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 335257 (0.37%)

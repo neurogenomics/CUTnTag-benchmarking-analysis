@@ -1,0 +1,1 @@
+cmd = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/MACS2/CST9733_1_100_H3K27me3_rmDup_q1e-5_peaks.broadPeak hg19 /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/motifs/MACS2/CST9733_1_100_H3K27me3 -size 1000

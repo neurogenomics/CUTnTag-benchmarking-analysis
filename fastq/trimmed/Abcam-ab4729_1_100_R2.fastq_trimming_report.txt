@@ -1,0 +1,132 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Abcam-ab4729_1_100_R2.fastq
+Trimming mode: paired-end
+Trim Galore version: 0.6.6
+Cutadapt version: 3.3
+Number of cores used for trimming: 1
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Using Nextera adapter for trimming (count: 110965). Second best hit was Illumina (count: 0)
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.3 with Python 3.8.8
+Command line parameters: -j 1 -e 0.1 -q 20 -O 1 -a CTGTCTCTTATA /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Abcam-ab4729_1_100_R2.fastq
+Processing reads on 1 core in single-end mode ...
+Finished in 4816.58 s (33 µs/read; 1.83 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:             147,221,897
+Reads with adapters:                82,982,919 (56.4%)
+Reads written (passing filters):   147,221,897 (100.0%)
+
+Total basepairs processed: 10,977,100,055 bp
+Quality-trimmed:              78,484,296 bp (0.7%)
+Total written (filtered):  10,371,253,960 bp (94.5%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 82982919 times
+
+No. of allowed errors:
+1-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 16.1%
+  C: 38.1%
+  G: 23.3%
+  T: 22.5%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	45498416	36805474.2	0	45498416
+2	11492258	9201368.6	0	11492258
+3	4626134	2300342.1	0	4626134
+4	1317831	575085.5	0	1317831
+5	509626	143771.4	0	509626
+6	342887	35942.8	0	342887
+7	340990	8985.7	0	340990
+8	443160	2246.4	0	443160
+9	1324121	561.6	0	1321502 2619
+10	17484	140.4	1	6300 11184
+11	1661260	35.1	1	1619528 41732
+12	20118	8.8	1	12358 7760
+13	1177619	8.8	1	1152232 25387
+14	9343	8.8	1	4790 4553
+15	691282	8.8	1	673867 17415
+16	7042	8.8	1	3681 3361
+17	319486	8.8	1	308638 10848
+18	421976	8.8	1	410050 11926
+19	646206	8.8	1	624566 21640
+20	1746200	8.8	1	1704425 41775
+21	18128	8.8	1	12530 5598
+22	963513	8.8	1	938275 25238
+23	859289	8.8	1	836530 22759
+24	685023	8.8	1	668727 16296
+25	491880	8.8	1	477976 13904
+26	344830	8.8	1	333128 11702
+27	289096	8.8	1	280293 8803
+28	335148	8.8	1	322985 12163
+29	1186194	8.8	1	1157275 28919
+30	20058	8.8	1	15009 5049
+31	818755	8.8	1	795872 22883
+32	2076632	8.8	1	2028225 48407
+33	7061	8.8	1	4673 2388
+34	15948	8.8	1	12101 3847
+35	439739	8.8	1	428374 11365
+36	427240	8.8	1	416141 11099
+37	7453	8.8	1	5402 2051
+38	151896	8.8	1	147375 4521
+39	187898	8.8	1	182047 5851
+40	565457	8.8	1	554415 11042
+41	4812	8.8	1	2134 2678
+42	7922	8.8	1	4977 2945
+43	163928	8.8	1	160178 3750
+44	104718	8.8	1	100536 4182
+45	143370	8.8	1	139140 4230
+46	1330	8.8	1	235 1095
+47	2613	8.8	1	99 2514
+48	1285	8.8	1	37 1248
+49	1517	8.8	1	71 1446
+50	957	8.8	1	145 812
+51	3419	8.8	1	2147 1272
+52	2968	8.8	1	1124 1844
+53	2337	8.8	1	1086 1251
+54	2314	8.8	1	1224 1090
+55	1300	8.8	1	615 685
+56	2619	8.8	1	1331 1288
+57	2583	8.8	1	474 2109
+58	1463	8.8	1	242 1221
+59	1060	8.8	1	196 864
+60	812	8.8	1	224 588
+61	2115	8.8	1	368 1747
+62	808	8.8	1	183 625
+63	1582	8.8	1	176 1406
+64	1487	8.8	1	395 1092
+65	2410	8.8	1	42 2368
+66	2552	8.8	1	702 1850
+67	4820	8.8	1	963 3857
+68	448	8.8	1	11 437
+69	833	8.8	1	82 751
+70	880	8.8	1	176 704
+71	1622	8.8	1	359 1263
+72	2073	8.8	1	194 1879
+73	633	8.8	1	83 550
+74	2648	8.8	1	2068 580
+75	4	8.8	1	1 3
+
+RUN STATISTICS FOR INPUT FILE: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Abcam-ab4729_1_100_R2.fastq
+=============================================
+147221897 sequences processed in total
+
+Total number of sequences analysed for the sequence pair length validation: 147221897
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 600415 (0.41%)

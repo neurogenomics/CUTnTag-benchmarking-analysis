@@ -1,0 +1,1 @@
+cmd = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/MACS2/Diagenode_C15410196_1_50_rmDup_q1e-5_peaks.narrowPeak hg19 /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/motifs/MACS2/Diagenode_C15410196_1_50 -size 1000

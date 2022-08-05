@@ -1,0 +1,42 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Abcam-ab4729_1_100_R1.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.6.6
+Cutadapt version: 3.3
+Number of cores used for trimming: 1
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Using Nextera adapter for trimming (count: 110965). Second best hit was smallRNA (count: 0)
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.3 with Python 3.8.8
+Command line parameters: -j 1 -e 0.1 -q 20 -O 1 -a CTGTCTCTTATA /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/fastq/Abcam-ab4729_1_100_R1.fastq.gz
+Processing reads on 1 core in single-end mode ...
+Traceback (most recent call last):
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/bin/cutadapt", line 10, in <module>
+    sys.exit(main_cli())
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/site-packages/cutadapt/__main__.py", line 848, in main_cli
+    main(sys.argv[1:])
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/site-packages/cutadapt/__main__.py", line 913, in main
+    stats = r.run()
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/site-packages/cutadapt/pipeline.py", line 866, in run
+    (n, total1_bp, total2_bp) = self._pipeline.process_reads(progress=self._progress)
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/site-packages/cutadapt/pipeline.py", line 326, in process_reads
+    for read in self._reader:
+  File "src/dnaio/_core.pyx", line 173, in fastq_iter
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/gzip.py", line 292, in read
+    return self._buffer.read(size)
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/_compression.py", line 68, in readinto
+    data = self.read(len(byte_view))
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/gzip.py", line 470, in read
+    self._read_eof()
+  File "/rds/general/user/la420/home/anaconda3/envs/cutadaptenv/lib/python3.8/gzip.py", line 516, in _read_eof
+    raise BadGzipFile("CRC check failed %s != %s" % (hex(crc32),
+gzip.BadGzipFile: CRC check failed 0x4088b1f != 0x68369195

@@ -1,0 +1,1 @@
+cmd = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/SEACR/Diagenode_C15410196_1_50_rmDup_seacr_top0.01_peaks.stringent.bed hg19 /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/motifs/SEACR/Diagenode_C15410196_1_50 -size 1000
