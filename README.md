@@ -28,11 +28,11 @@ Required R packages can be found in the session information provided in the html
 
 ### References
 
-CUT&Tag recovers up to half of ENCODE ChIP-seq peaks
-Di Hu, Leyla Abbasova, Brian M Schilder, Alexi Nott, Nathan G Skene, Sarah J Marzi
-bioRxiv 2022.03.30.486382; doi: https://doi.org/10.1101/2022.03.30.486382
-
-EpiCompare: R package for the comparison and quality control of epigenomic peak files (2022)
-Sera Choi, Brian M. Schilder, Leyla Abbasova, Alan E. Murphy, Nathan G. Skene
-bioRxiv 2022.07.22.501149; doi: https://doi.org/10.1101/2022.07.22.501149
+CUT&Tag recovers up to half of ENCODE ChIP-seq peaks  
+Di Hu, Leyla Abbasova, Brian M Schilder, Alexi Nott, Nathan G Skene, Sarah J Marzi  
+bioRxiv 2022.03.30.486382; doi: https://doi.org/10.1101/2022.03.30.486382  
+  
+EpiCompare: R package for the comparison and quality control of epigenomic peak files (2022)  
+Sera Choi, Brian M. Schilder, Leyla Abbasova, Alan E. Murphy, Nathan G. Skene  
+bioRxiv 2022.07.22.501149; doi: https://doi.org/10.1101/2022.07.22.501149  
 
