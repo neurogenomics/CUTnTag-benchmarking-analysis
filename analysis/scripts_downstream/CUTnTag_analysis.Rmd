@@ -1,10 +1,10 @@
 ---
-title: "CUT&TAG: bulk analysis"
+title: "CUT&Tag analysis"
 author: "Leyla Abbasova"
 output:
   rmarkdown::html_document:
-    theme: default
-    highlight: tango
+    theme: flatly
+    highlight: breezedark
     code_folding: show
     toc: yes
     toc_float:
@@ -18,15 +18,13 @@ output:
 ```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(stringr)
-library(corrplot)
 library(reshape2)
-library(gtable)
-library(gridExtra)
 library(ggpubr)
 library(ggbreak)
 library(gplots)
 library(ggplot2)
 library(viridis)
+library(corrplot)
 library(GenomicRanges)
 library(IRanges)
 library(chromVAR)
@@ -39,12 +37,8 @@ library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 library(BSgenome.Hsapiens.UCSC.hg19)
 library(org.Hs.eg.db)
 library(genomation)
-library(RColorBrewer)
 library(marge)
 library(DiffBind)
-library(circlize)
-library(EnrichedHeatmap)
-library(scales)
 ```
 
 
@@ -52,14 +46,14 @@ library(scales)
 
 ## Alignment summary 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
+```{r}
+datadir = "/Volumes/test_data"
 
-sampleList = c("Abcam-ab4729_1_100", "Diagenode_C15410196_1_50", "CST9733_1_100_H3K27me3")
+sampleList = c("Diagenode_C15410196_1_50", "CST9733_1_100_H3K27me3")
 
 alignResult = c()
 for(sample in sampleList){
-  alignRes = read.table(paste0(datadir, "/", sample, "_bowtie2.txt"), header = FALSE, fill = TRUE)
+  alignRes = read.table(paste0(datadir, "/alignment/sam/bowtie2_summary/", sample, "_bowtie2.txt"), header = FALSE, fill = TRUE)
   alignRate = substr(alignRes$V1[6], 1, nchar(as.character(alignRes$V1[6]))-1)
   alignResult = data.frame(Sample = sample, SequencingDepth = alignRes$V1[1] %>% as.character %>% as.numeric, 
                            MappedFragNum_hg19 = alignRes$V1[4] %>% as.character %>% as.numeric + alignRes$V1[5] %>% as.character %>% as.numeric,
@@ -72,7 +66,7 @@ alignResult %>% mutate(AlignmentRate_hg19 = paste0(AlignmentRate_hg19, "%"))
 
 ## Duplicates
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE}
+```{r}
 dupResult = c()
 for(sample in sampleList){
   dupRes = read.table(paste0(datadir, "/removeDuplicate/picard_summary/", sample, "_picard.rmDup.txt"), header = TRUE, fill = TRUE)
@@ -88,14 +82,14 @@ alignDupSummary
 
 ### Without duplicates 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=30, fig.height=8}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=3}
 fragLen = c()
 for(sample in sampleList){
   fragLen = read.table(paste0(datadir, "/alignment/sam/fragmentLen/", sample, "_rmDup_fragmentLen.txt"), header = FALSE) %>% mutate(fragLen = V1 %>% as.numeric, fragCount = V2 %>% as.numeric, Weight = as.numeric(V2)/sum(as.numeric(V2)), Sample = sample) %>% rbind(fragLen, .) 
 }
 
 fig1 = fragLen %>% ggplot(aes(x = Sample, y = fragLen, weight = Weight, fill = Sample)) +
-    theme_bw(base_size = 12) +
+    theme_bw(base_size = 15) +
     geom_violin(bw = 5) +
     scale_y_continuous(breaks = seq(0, 800, 50)) +
     ggpubr::rotate_x_text(angle = 20) +
@@ -105,7 +99,7 @@ fig1 = fragLen %>% ggplot(aes(x = Sample, y = fragLen, weight = Weight, fill = S
     
   
 fig2 = fragLen %>% ggplot(aes(x = fragLen, y = fragCount, color = Sample, group = Sample)) +
-    theme_bw(base_size = 12) +
+    theme_bw(base_size = 15) +
     geom_line(size = 1) +
     xlab("Fragment Length") +
     ylab("Count") +
@@ -117,14 +111,14 @@ ggarrange(fig1, fig2, ncol = 2)
 
 ### With duplicates 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=30, fig.height=8}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=3}
 fragLen = c()
 for(sample in sampleList){
   fragLen = read.table(paste0(datadir, "/alignment/sam/fragmentLen/", sample, "_withDup_fragmentLen.txt"), header = FALSE) %>% mutate(fragLen = V1 %>% as.numeric, fragCount = V2 %>% as.numeric, Weight = as.numeric(V2)/sum(as.numeric(V2)), Sample = sample) %>% rbind(fragLen, .) 
 }
 
 fig3 = fragLen %>% ggplot(aes(x = Sample, y = fragLen, weight = Weight, fill = Sample)) +
-    theme_bw(base_size = 12) +
+    theme_bw(base_size = 15) +
     geom_violin(bw = 5) +
     scale_y_continuous(breaks = seq(0, 800, 50)) +
     ggpubr::rotate_x_text(angle = 20) +
@@ -134,7 +128,7 @@ fig3 = fragLen %>% ggplot(aes(x = Sample, y = fragLen, weight = Weight, fill = S
     
   
 fig4 = fragLen %>% ggplot(aes(x = fragLen, y = fragCount, color = Sample, group = Sample)) +
-    theme_bw(base_size = 12) +
+    theme_bw(base_size = 15) +
     geom_line(size = 1) +
     xlab("Fragment Length") +
     ylab("Count") +
@@ -146,7 +140,7 @@ ggarrange(fig3, fig4, ncol = 2)
 
 ## Peak information
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 # peak names simplified and all files moved to one directory
 
 sampleList_all = c()
@@ -160,23 +154,26 @@ for(sample in sampleList){
 }
 
 
-hg19_blacklist = ChIPseeker::readPeakFile(paste0(datadir, "/resources/hg19/hg19-blacklist.v2.bed.gz", as = "GRanges"))
+hg19_blacklist = ChIPseeker::readPeakFile(paste0(datadir, "/resources/hg19/hg19-blacklist.v2.bed.gz"), as = "GRanges")
 
 blacklist_counts = c()
 peakList = list()
+peakList_unfilt = list()
 for(sample in sampleList_all){
-  peak = ChIPseeker::readPeakFile(paste0(datadir, "/peakCalling/all_peaks/", sample, ".bed"), as = "GRanges") %>% BRGenomics::tidyChromosomes(keep.X = TRUE, keep.Y = TRUE)
-  blacklist_count = length(IRanges::subsetByOverlaps(peak, hg19_blacklist))
-  peak = IRanges::subsetByOverlaps(peak, hg19_blacklist, invert = TRUE)
-  peakList = c(peakList, peak)
+  peak_unfilt = ChIPseeker::readPeakFile(paste0(datadir, "/peakCalling/all_peaks/", sample, ".bed"), as = "GRanges")
+  peakList_unfilt = c(peakList_unfilt, peak_unfilt)
+  blacklist_count = length(IRanges::subsetByOverlaps(peak_unfilt, hg19_blacklist))
+  peak_filt = IRanges::subsetByOverlaps(peak_unfilt, hg19_blacklist, invert = TRUE) %>% BRGenomics::tidyChromosomes(keep.X = TRUE, keep.Y = TRUE)
+  peakList = c(peakList, peak_filt)
   blacklist_counts = c(blacklist_counts, blacklist_count)
 }
 
-peakList = setNames(peakList, sampleList_all)
+names(peakList) = sampleList_all
+names(peakList_unfilt) = sampleList_all
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 sampleList_all_withDup = c()
 for(sample in sampleList_all){
   name = paste0(sample, "_", "withDup")
@@ -184,19 +181,22 @@ for(sample in sampleList_all){
 }
 
 peakList_withDup = list()
+peakList_withDup_unfilt = list()
 for(sample in sampleList_all_withDup){
-  peak = ChIPseeker::readPeakFile(paste0(datadir, "/peakCalling/all_peaks/", sample, ".bed"), as = "GRanges") %>% BRGenomics::tidyChromosomes(keep.X = TRUE, keep.Y = TRUE)
-  peak = IRanges::subsetByOverlaps(peak, hg19_blacklist, invert = TRUE)
-  peakList_withDup = c(peakList_withDup, peak)
+  peak_unfilt = ChIPseeker::readPeakFile(paste0(datadir, "/peakCalling/all_peaks/", sample, ".bed"), as = "GRanges")
+  peakList_withDup_unfilt = c(peakList_withDup_unfilt, peak_unfilt)
+  peak_filt = IRanges::subsetByOverlaps(peak_unfilt, hg19_blacklist, invert = TRUE) %>% BRGenomics::tidyChromosomes(keep.X = TRUE, keep.Y = TRUE)
+  peakList_withDup = c(peakList_withDup, peak_filt)
 }
 
-peakList_withDup = setNames(peakList_withDup, sampleList_all_withDup)
+names(peakList_withDup) = sampleList_all_withDup
+names(peakList_withDup_unfilt) = sampleList_all_withDup
 ```
 
 
 ### Peak numbers
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 ENCODE_H3K27ac = ChIPseeker::readPeakFile(paste0(datadir, "/resources/ENCODE/peaks/H3K27ac_ENCFF044JNJ.bed.narrowPeak"), as = "GRanges")
 ENCODE_H3K27me3 = ChIPseeker::readPeakFile(paste0(datadir, "/resources/ENCODE/peaks/H3K27me3_ENCFF000BXB.bed.broadPeak"), as = "GRanges")
 
@@ -207,7 +207,7 @@ peakList_with_ENCODE = setNames(peakList_with_ENCODE, sampleList_all_with_ENCODE
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 Total_CT_peaks = c()
 Total_CT_peaks_withDup = c()
 for(i in 1:length(peakList)){
@@ -220,107 +220,18 @@ Total_CT_peaks
 ```
 
 
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=5, fig.height=3}
-Total_CT_peaks_SEACR = Total_CT_peaks[c(seq(1, nrow(Total_CT_peaks), by = 2)),2] 
-Total_CT_peaks_SEACR_withDup = Total_CT_peaks[c(seq(1, nrow(Total_CT_peaks), by = 2)),3] 
-
-Total_CT_peaks_MACS2 = Total_CT_peaks[c(seq(2, nrow(Total_CT_peaks), by = 2)),2]
-Total_CT_peaks_MACS2_withDup = Total_CT_peaks[c(seq(2, nrow(Total_CT_peaks), by = 2)),3]
-
-Total_CT_peaks_summary = data.frame(Sample = labels_list, Total_CT_peaks_SEACR = Total_CT_peaks_SEACR, Total_CT_peaks_MACS2 = Total_CT_peaks_MACS2)
-Total_CT_peaks_summary_withDup = data.frame(Sample = labels_list, Total_CT_peaks_SEACR_withDup = Total_CT_peaks_SEACR_withDup, Total_CT_peaks_MACS2_withDup = Total_CT_peaks_MACS2_withDup)
-
-Total_CT_peaks_summary_SEACR = data.frame(Sample = labels_list, Total_CT_peaks_SEACR = Total_CT_peaks_SEACR, Total_CT_peaks_SEACR_withDup = Total_CT_peaks_SEACR_withDup)
-Total_CT_peaks_summary_MACS2 = data.frame(Sample = labels_list, Total_CT_peaks_MACS2 = Total_CT_peaks_MACS2, Total_CT_peaks_MACS2_withDup = Total_CT_peaks_MACS2_withDup)
-
-Total_CT_peaks_summary_melt = melt(Total_CT_peaks_summary)
-Total_CT_peaks_summary_withDup_melt = melt(Total_CT_peaks_summary_withDup)
-Total_CT_peaks_summary_SEACR_melt = melt(Total_CT_peaks_summary_SEACR)
-Total_CT_peaks_summary_MACS2_melt = melt(Total_CT_peaks_summary_MACS2)
-```
-
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=25, fig.height=12}
-PeakN_plot = ggplot(Total_CT_peaks_summary_SEACR_melt, aes(Sample, value)) +
-  theme_bw() + 
-  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity") + 
-  ggtitle("Peaks called with SEACR") +
-  xlab("Sample") +
-  ylab("") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 25)) +
-  theme(axis.title = element_text(size = 25)) +
-  theme(plot.title = element_text(size = 35)) +
-  theme(legend.text = element_text(size = 20)) +
-  theme(legend.title = element_blank()) +
-  theme(legend.position = "bottom") +
-  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
-
-PeakN_plot
-
-
-PeakN_plot_withDup = ggplot(Total_CT_peaks_summary_MACS2_melt, aes(Sample, value)) +
-  theme_bw() + 
-  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity") + 
-  ggtitle("Peaks called with MACS2") +
-  xlab("Sample") +
-  ylab("") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 25)) +
-  theme(axis.title = element_text(size = 25)) +
-  theme(plot.title = element_text(size = 35)) +
-  theme(legend.text = element_text(size = 20)) +
-  theme(legend.title = element_blank()) +
-  theme(legend.position = "bottom") +
-  scale_y_continuous(labels = function(x) format(x, scientific = FALSE), breaks = seq(0, 300000, by = 50000))
-
-PeakN_plot_withDup
-```
-
-
 ### Blacklisted peaks 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=8}
+```{r}
 blacklisted = data.frame(Sample = sampleList_all, Total_peaks = Total_CT_peaks$Total_PeakN, Blacklisted_peaks = blacklist_counts)
 blacklisted$Proportion = blacklisted$Blacklisted_peaks / blacklisted$Total_peaks * 100
 blacklisted
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=8}
-blacklisted_SEACR = blacklisted[c(seq(1, nrow(blacklisted), by = 2)),4] 
-blacklisted_MACS2 = blacklisted[c(seq(2, nrow(blacklisted), by = 2)),4]
-
-blacklisted_summary = data.frame(Sample = labels_list, blacklisted_SEACR = blacklisted_SEACR, blacklisted_MACS2 = blacklisted_MACS2)
-blacklisted_summary_melt = melt(blacklisted_summary)
-```
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=20, fig.height=8}
-blacklist_plot = ggplot(blacklisted_summary_melt, aes(Sample, value)) +
-geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
-  theme_bw() + 
-  theme(plot.margin = unit(c(0.5,0.5,0.5,1), "cm")) +
-  ylim(0, 40) +
-  ylab("% of peaks") +
-  xlab("Sample") +
-  ggtitle("Proportion of CUT&Tag peaks in blacklisted regions") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 18)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 18)) +
-  theme(legend.title = element_text(size = 18)) +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.7, option = "viridis")
-
-blacklist_plot
-```
-
-
 ### Peak widths
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 peakWidth = c()
 for(peak in peakList){
   peakW = GenomicRanges::width(peak) %>% summary() %>% round() %>% list()
@@ -336,37 +247,24 @@ WSummary
 ```
 
 
-### Peak and sequencing/alignment results   {.tabset}
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-MACS2_peaks = data.frame(Sample = sampleList, PeakN_MACS2 = Total_CT_peaks[grep("MACS2", Total_CT_peaks$Sample), "Total_PeakN"])
-SEACR_peaks = data.frame(Sample = sampleList, PeakN_SEACR = Total_CT_peaks[grep("SEACR", Total_CT_peaks$Sample), "Total_PeakN"])
-
-PeaksAlignmentSummary = left_join(alignDupSummary, SEACR_peaks, by = "Sample") %>% left_join(MACS2_peaks, by = "Sample")
-PeaksAlignmentSummary = PeaksAlignmentSummary[c("Sample", "SequencingDepth", "MappedFragNum_hg19", "UniqueFragNum", "DuplicationRate", "PeakN_SEACR", "PeakN_MACS2")]
-PeaksAlignmentSummary
-```
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, out.width="49%", out.height="49%", fig.show="hold"}
-ggplot(PeaksAlignmentSummary, aes(x = UniqueFragNum, y = PeakN_SEACR)) + theme_bw() + geom_point() + geom_text(aes(label = Sample), nudge_y = 500, hjust = "inward")
-
-ggplot(PeaksAlignmentSummary, aes(x = UniqueFragNum, y = PeakN_MACS2)) + theme_bw() + geom_point() + geom_text(aes(label = Sample), nudge_y = 500, hjust = "inward")
-
-ggplot(PeaksAlignmentSummary, aes(x = SequencingDepth, y = DuplicationRate)) + theme_bw() + geom_point() + geom_text(aes(label = Sample))
-```
-
-
 # Fractions of reads in peaks
 
 ```{r}
-calculate_frips = function(sample_list, peak_caller, duplicates, peakdup, bamdup){
+calculate_frips = function(sample_list, peak_list, dup){
   inPeakData_df = c()
   
-  for(sample in sample_list){
-    peakRes = read.table(paste0(datadir, "/all_peaks/", sample, "_", peak_caller, ".bed"), header = FALSE, fill = TRUE)
-    peak.gr = GenomicRanges::GRanges(seqnames = peakRes$V1, IRanges(start = peakRes$V2, end = peakRes$V3), strand = "*")
-    bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_", bamdup, ".mapped.bam")
+  for(i in 1:length(sample_list)){
+    
+    # to use single peak files
+    if(length(peak_list) > 1){
+      peakRes = data.frame(peak_list[[i]])
+    } else {
+      peakRes = data.frame(peak_list[[1]])
+    }
+
+    sample = sample_list[i]
+    peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
+    bamFile = paste0(datadir, "/alignment/bam/", sample, "_", dup, "_bowtie2.mapped.bam")
     fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
     inPeakN = counts(fragment_counts)[,1] %>% sum
     inPeakData_df = rbind(inPeakData_df, data.frame(Sample = sample, inPeakN = inPeakN))
@@ -378,191 +276,93 @@ calculate_frips = function(sample_list, peak_caller, duplicates, peakdup, bamdup
 
 
 ```{r}
-SEACR_noDup_inPeakData = calculate_frips(sampleList, "SEACR", "", "rmDup")
-SEACR_noDup_inPeakData
+# use original peaks (unfiltered)
+SEACR_peakList_unfilt = peakList_unfilt[seq(1, length(peakList_unfilt), by = 2)]
+MACS2_peakList_unfilt = peakList_unfilt[seq(2, length(peakList_unfilt), by = 2)]
+SEACR_peakList_unfilt_withDup = peakList_withDup_unfilt[seq(1, length(peakList_withDup_unfilt), by = 2)]
+MACS2_peakList_unfilt_withDup = peakList_withDup_unfilt[seq(1, length(peakList_withDup_unfilt), by = 2)]
 ```
 
 
-```{r}
-MACS2_noDup_inPeakData = calculate_frips(sampleList, "MACS2", "", "rmDup")
-MACS2_noDup_inPeakData
+## SEACR peaks
+
+```{r, eval=FALSE}
+SEACR_noDup_inPeakData = calculate_frips(sampleList, SEACR_peakList_unfilt, "rmDup")
+write.table(SEACR_noDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/SEACR_noDup_inPeakData_2.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
+```
+
+```{r, eval=FALSE}
+SEACR_withDup_inPeakData = calculate_frips(sampleList, SEACR_peakList_unfilt_withDup, "withDup")
+#write.table(SEACR_withDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/SEACR_withDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
 ```
 
 
-```{r}
-SEACR_withDup_inPeakData = calculate_frips(sampleList, "SEACR", "withDup", "rmDup")
-SEACR_withDup_inPeakData
+## MACS2 peaks
+
+```{r, eval=FALSE}
+MACS2_noDup_inPeakData = calculate_frips(sampleList, MACS2_peakList_unfilt, "rmDup")
+#write.table(MACS2_noDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/MACS2_noDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
+```
+
+```{r, eval=FALSE}
+MACS2_withDup_inPeakData = calculate_frips(sampleList, MACS2_peakList_unfilt_withDup, "withDup")
+#write.table(MACS2_withDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/MACS2_withDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
 ```
 
 
-```{r}
-MACS2_withDup_inPeakData = calculate_frips(sampleList, "SEACR", "withDup", "withDup")
-MACS2_withDup_inPeakData
+## ENCODE H3K27ac peaks
+
+```{r, eval=FALSE}
+ENCODE_H3K27ac_noDup_inPeakData = calculate_frips(sampleList, list(ENCODE_H3K27ac), "rmDup")
+#write.table(ENCODE_H3K27ac_noDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27ac_noDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
+```
+
+```{r, eval=FALSE}
+ENCODE_H3K27ac_withDup_inPeakData = calculate_frips(sampleList, list(ENCODE_H3K27ac), "withDup")
+#write.table(ENCODE_H3K27ac_withDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27ac_withDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
 ```
 
 
-## Without duplicates 
+## ENCODE H3K27me3 peaks
 
-### SEACR
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-
-SEACR_noDup_inPeakData = c()
-for(sample in sampleList){
-  peakRes = read.table(paste0(datadir, "/all_peaks/", sample, "_SEACR.bed"), header = FALSE, fill = TRUE)
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$V1, IRanges(start = peakRes$V2, end = peakRes$V3), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  SEACR_noDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  SEACR_noDup_inPeakData = rbind(SEACR_noDup_inPeakData, data.frame(Sample = sample, SEACR_noDup_inPeakN = SEACR_noDup_inPeakN))
-}
+```{r, eval=FALSE}
+ENCODE_H3K27me3_noDup_inPeakData = calculate_frips(sampleList, list(ENCODE_H3K27me3), "rmDup")
+#write.table(ENCODE_H3K27me3_noDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27me3_noDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
 ```
 
-
-### MACS2
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-MACS2_noDup_inPeakData = c()
-for(sample in sampleList){
-  peakRes = read.table(paste0(datadir, "/all_peaks/", sample, "_MACS2.bed"), header = FALSE, fill = TRUE)
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$V1, IRanges(start = peakRes$V2, end = peakRes$V3), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  MACS2_noDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  MACS2_noDup_inPeakData = rbind(MACS2_noDup_inPeakData, data.frame(Sample = sample, MACS2_noDup_inPeakN = MACS2_noDup_inPeakN))
-}
-```
-
-
-### ENCODE H3K27ac
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakRes = data.frame(ENCODE_H3K27ac)
-
-ENCODE_H3K27ac_noDup_inPeakData = c()
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ENCODE_H3K27ac_noDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_H3K27ac_noDup_inPeakData = rbind(ENCODE_H3K27ac_noDup_inPeakData, data.frame(Sample = sample, ENCODE_H3K27ac_noDup_inPeakN = ENCODE_H3K27ac_noDup_inPeakN))
-}
-```
-
-
-### ENCODE H3K27me3
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakRes = data.frame(ENCODE_H3K27me3)
-
-ENCODE_H3K27me3_noDup_inPeakData = c()
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ENCODE_H3K27me3_noDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_H3K27me3_noDup_inPeakData = rbind(ENCODE_H3K27me3_noDup_inPeakData, data.frame(Sample = sample, ENCODE_H3K27me3_noDup_inPeakN = ENCODE_H3K27me3_noDup_inPeakN))
-}
-```
-
-
-## With duplicates 
-
-### SEACR
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies_withDup"
-
-SEACR_withDup_inPeakData = c()
-for(sample in sampleList){
-  peakRes = read.table(paste0(datadir, "/all_peaks/", sample, "_SEACR_withDup.bed"), header = FALSE, fill = TRUE)
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$V1, IRanges(start = peakRes$V2, end = peakRes$V3), strand = "*")
-  bamFile = paste0(datadir, "/bam/mapped_bam/", sample, "_withDup_bowtie2.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  SEACR_withDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  SEACR_withDup_inPeakData = rbind(SEACR_withDup_inPeakData, data.frame(Sample = sample, SEACR_withDup_inPeakN = SEACR_withDup_inPeakN))
-}
-```
-
-
-### MACS2
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-MACS2_withDup_inPeakData = c()
-for(sample in sampleList){
-  peakRes = read.table(paste0(datadir, "/all_peaks/", sample, "_MACS2_withDup.bed"), header = FALSE, fill = TRUE)
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$V1, IRanges(start = peakRes$V2, end = peakRes$V3), strand = "*")
-  bamFile = paste0(datadir, "/bam/mapped_bam/", sample, "_withDup_bowtie2.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  MACS2_withDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  MACS2_withDup_inPeakData = rbind(MACS2_withDup_inPeakData, data.frame(Sample = sample, MACS2_withDup_inPeakN = MACS2_withDup_inPeakN))
-}
-```
-
-
-### ENCODE H3K27ac
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakRes = data.frame(ENCODE_H3K27ac)
-
-ENCODE_H3K27ac_withDup_inPeakData = c()
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/mapped_bam/", sample, "_withDup_bowtie2.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ENCODE_H3K27ac_withDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_H3K27ac_withDup_inPeakData = rbind(ENCODE_H3K27ac_withDup_inPeakData, data.frame(Sample = sample, ... = ENCODE_H3K27ac_withDup_inPeakN = ENCODE_H3K27ac_withDup_inPeakN))
-}
-```
-
-
-### ENCODE H3K27me3
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakRes = data.frame(ENCODE_H3K27me3)
-
-ENCODE_H3K27me3_withDup_inPeakData = c()
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/mapped_bam/", sample, "_withDup_bowtie2.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ENCODE_H3K27me3_withDup_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_H3K27me3_withDup_inPeakData = rbind(ENCODE_H3K27me3_withDup_inPeakData, data.frame(Sample = sample, ENCODE_H3K27me3_withDup_inPeakN = ENCODE_H3K27me3_withDup_inPeakN))
-}
+```{r, eval=FALSE}
+ENCODE_H3K27me3_withDup_inPeakData = calculate_frips(sampleList, list(ENCODE_H3K27me3), "withDup")
+#write.table(ENCODE_H3K27me3_withDup_inPeakData, file = paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27me3_withDup_inPeakData.csv"), sep = ",", col.names = TRUE, row.names = FALSE)
 ```
 
 
 ## Summary
 
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-fragList_SEACR_noDup = c(129590, 424161, 1003438, 503299, 1454379, 2371634, 550695, 930301, 1533317, 1882884, 2027163, 5918255)
-fragList_SEACR_withDup = c(9462197, 5279727, 34740449, 1167264, 51657750, 5735124, 707195, 1123282, 1660888, 1913039, 2058454, 6021331)
-
-fragList_MACS2_noDup = c(119950, 368788, 943126, 268646, 1405713, 2592568, 546825, 938587, 1146564, 1971049, 2174636, 5781499)
-fragList_MACS2_withDup = c(24165154, 9567637, 58658997, 2067427, 103338255, 8468627, 805238, 1225467, 1320433, 2029636, 2234724, 5913943)
-
-# for ac narrowpeaks 
-fragList_ENCODE_H3K27ac_noDup = c(92677, 289554, 837321, 464403, 1233018, 57782, 621112, 903945, 1261292, 26084, 19531, 18670)
-fragList_ENCODE_H3K27ac_withDup = c(8096278, 2876807, 26971195, 1090720, 50341343, 145522, 781435, 1063991, 1368005, 26637, 19911, 18946)
-
-# for me3 broadpeaks 
-fragList_ENCODE_H3K27me3_noDup = c(102705, 309222, 589975, 1186129, 788989, 3209565, 314107, 460712, 786736, 2745931, 3026085, 6548251)
-fragList_ENCODE_H3K27me3_withDup = c(6638220, 2549158, 14994334, 2746525, 26948211, 7687884, 391689, 536695, 848799, 2788043, 3069956, 6646832)
-
-SEACR_noDup_inPeakData = data.frame(Sample = sampleList, SEACR_noDup_inPeakN = fragList_SEACR_noDup)
-SEACR_withDup_inPeakData = data.frame(Sample = sampleList, SEACR_withDup_inPeakN = fragList_SEACR_withDup)
-MACS2_noDup_inPeakData = data.frame(Sample = sampleList, MACS2_noDup_inPeakN = fragList_MACS2_noDup)
-MACS2_withDup_inPeakData = data.frame(Sample = sampleList, MACS2_withDup_inPeakN = fragList_MACS2_withDup)
-ENCODE_H3K27ac_noDup_inPeakData = data.frame(Sample = sampleList, ENCODE_H3K27ac_noDup_inPeakN = fragList_ENCODE_H3K27ac_noDup)
-ENCODE_H3K27ac_withDup_inPeakData = data.frame(Sample = sampleList, ENCODE_H3K27ac_withDup_inPeakN = fragList_ENCODE_H3K27ac_withDup)
-ENCODE_H3K27me3_noDup_inPeakData = data.frame(Sample = sampleList, ENCODE_H3K27me3_noDup_inPeakN = fragList_ENCODE_H3K27me3_noDup)
-ENCODE_H3K27me3_withDup_inPeakData = data.frame(Sample = sampleList, ENCODE_H3K27me3_withDup_inPeakN = fragList_ENCODE_H3K27me3_withDup)
+```{r}
+# save and load counts to speed up processing
+SEACR_noDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/SEACR_noDup_inPeakData.csv"))
+SEACR_withDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/SEACR_withDup_inPeakData.csv"))
+MACS2_noDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/MACS2_noDup_inPeakData.csv"))
+MACS2_withDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/MACS2_withDup_inPeakData.csv"))
+ENCODE_H3K27ac_noDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27ac_noDup_inPeakData.csv"))
+ENCODE_H3K27ac_withDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27ac_withDup_inPeakData.csv"))
+ENCODE_H3K27me3_noDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27me3_noDup_inPeakData.csv"))
+ENCODE_H3K27me3_withDup_inPeakData = read.csv(paste0(datadir, "/analysis/results/FRiPs/ENCODE_H3K27me3_withDup_inPeakData.csv"))
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-FRiP_data = alignDupSummary[c("Sample", "MappedFragNum_hg19", "UniqueFragNum")] %>% left_join(SEACR_noDup_inPeakData, by = "Sample") %>% left_join(SEACR_withDup_inPeakData, by = "Sample") %>% left_join(MACS2_noDup_inPeakData, by = "Sample") %>% left_join(MACS2_withDup_inPeakData, by = "Sample") %>% left_join(ENCODE_H3K27ac_noDup_inPeakData, by = "Sample") %>% left_join(ENCODE_H3K27ac_withDup_inPeakData, by = "Sample") %>% left_join(ENCODE_H3K27me3_noDup_inPeakData, by = "Sample") %>% left_join(ENCODE_H3K27me3_withDup_inPeakData, by = "Sample")
+```{r}
+FRiP_data = alignDupSummary[c("Sample", "MappedFragNum_hg19", "UniqueFragNum")] %>%
+  left_join(SEACR_noDup_inPeakData, by = "Sample") %>% 
+  left_join(SEACR_withDup_inPeakData, by = "Sample") %>% 
+  left_join(MACS2_noDup_inPeakData, by = "Sample") %>% 
+  left_join(MACS2_withDup_inPeakData, by = "Sample") %>% 
+  left_join(ENCODE_H3K27ac_noDup_inPeakData, by = "Sample") %>% 
+  left_join(ENCODE_H3K27ac_withDup_inPeakData, by = "Sample") %>% 
+  left_join(ENCODE_H3K27me3_noDup_inPeakData, by = "Sample") %>% 
+  left_join(ENCODE_H3K27me3_withDup_inPeakData, by = "Sample")
+
+colnames(FRiP_data) = c("Sample", "MappedFragNum_hg19", "UniqueFragNum", "SEACR_noDup_inPeakN", "SEACR_withDup_inPeakN", "MACS2_noDup_inPeakN", "MACS2_withDup_inPeakN", "ENCODE_H3K27ac_noDup_inPeakN", "ENCODE_H3K27ac_withDup_inPeakN", "ENCODE_H3K27me3_noDup_inPeakN", "ENCODE_H3K27me3_withDup_inPeakN")
 
 FRiP_data$SEACR_noDup_FRiP = FRiP_data$SEACR_noDup_inPeakN/FRiP_data$UniqueFragNum * 100
 FRiP_data$SEACR_withDup_FRiP = FRiP_data$SEACR_withDup_inPeakN/FRiP_data$MappedFragNum_hg19 * 100
@@ -580,21 +380,21 @@ FRiP_data
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=30, fig.height=12}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 FRiP_summary = FRiP_data[c("Sample", "SEACR_noDup_FRiP", "SEACR_withDup_FRiP", "MACS2_noDup_FRiP", "MACS2_withDup_FRiP", "ENCODE_H3K27ac_noDup_FRiP", "ENCODE_H3K27ac_withDup_FRiP", "ENCODE_H3K27me3_noDup_FRiP", "ENCODE_H3K27me3_withDup_FRiP")]
 FRiP_summary_melt = melt(FRiP_summary, id.vars = c("Sample"))
 
 FRiP_plot = ggplot(FRiP_summary_melt, aes(Sample, value)) +
+  theme_bw() +
   geom_bar(aes(fill = variable), width = 0.6, position = position_dodge(width = 0.8), stat = "identity", colour = "black") +  
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of fragments in peaks") +
   xlab("Sample") +
   ggtitle("Fragments in sample and ENCODE peaks") +
-  theme(axis.text = element_text(size = 25)) +
-  theme(axis.title = element_text(size = 25)) +
-  theme(plot.title = element_text(size = 35)) +
-  theme(legend.text = element_text(size = 25)) +
+  theme(axis.text = element_text(size = 20)) +
+  theme(axis.title = element_text(size = 20)) +
+  theme(plot.title = element_text(size = 30)) +
+  theme(legend.text = element_text(size = 20)) +
   theme(legend.title = element_blank()) +
   ggpubr::rotate_x_text(angle = 45) +
   theme(legend.position = "bottom") +
@@ -606,106 +406,105 @@ FRiP_plot
 
 ## Fingerprint plots
 
-![H3K27ac](/rds/general/user/la420/home/CUTnTAG/antibodies/fingerprint/CT_H3K27ac_fingerprint.png)![H3K27me3](/rds/general/user/la420/home/CUTnTAG/antibodies/fingerprint/CT_H3K27me3_fingerprint.png) 
+Cumulative read enrichment across 1000bp genomic bins, scaled to 2M reads. 
 
-
-### Scaled
-All samples scaled to 2 million reads
-
-![H3K27ac](/rds/general/user/la420/home/CUTnTAG/antibodies/fingerprint/CT_H3K27ac_fingerprint_2M_no_AM.png)![H3K27me3](/rds/general/user/la420/home/CUTnTAG/antibodies/fingerprint/CT_H3K27me3_fingerprint_2M_renamed.png) 
+![Fingerprint](/Volumes/test_data/heatmap/cumulative_read_enrichment/cumulative_read_enrichments.png)
 
 
 # Sample correlation
 
-## With 500bp genome-wide bins (hg19)
+## Read-level
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=5, fig.height=10}
-counts = read.csv(paste0(datadir, "/correlation/hg19_500bp_overlaps_v2.txt"), sep = "\t", header = FALSE)
+### Across 500bp genome-wide bins
+
+```{r}
+counts = read.csv(paste0(datadir, "/correlation/hg19_500bp_overlaps_counts.txt"), sep = "\t", header = FALSE)
 colnames(counts) = c("chr", "start", "end", sampleList_with_ENCODE)
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=5, fig.height=10}
+```{r}
 # same order as bam list
-counts_copy = counts %>% as.matrix() %>% preprocessCore::normalize.quantiles() %>% round() %>% cor(method = "pearson")
-colnames(counts_copy) = sampleList
-rownames(counts_copy) = sampleList
+counts_corr = counts[4:ncol(counts)] %>% as.matrix() %>% preprocessCore::normalize.quantiles() %>% round() %>% cor(method = "pearson")
+colnames(counts_corr) = sampleList_with_ENCODE
+rownames(counts_corr) = sampleList_with_ENCODE
 
-counts_copy[counts_copy <= 0] = 0
+counts_corr[counts_corr <= 0] = 0
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=12, fig.height=12}
-counts_rounded = counts_copy %>% round(2)
-heatmap.2(x = counts_rounded, col = "viridis", trace = "none", density.info = "none", cexRow = 1.25, cexCol = 1.25, notecex = 1, notecol = "black", lhei = c(2, 11), lwid = c(2, 8), margins = c(30, 30))
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=8}
+counts_rounded = counts_corr %>% round(2)
+heatmap.2(x = counts_rounded, col = "viridis", trace = "none", density.info = "none", cexRow = 1.5, cexCol = 1.5, notecol = "black", lhei = c(2, 11), lwid = c(2, 8), margins = c(20, 20))
 ```
 
 
-## Peak correlation    {.tabset} 
+### Across ENCODE H3K27ac peak ranges
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=10}
-#labels_with_ENCODE = c(sampleList, "ENCODE H3K27ac", "ENCODE H3K27me3")
-#labels_SEACR_MACS2 = c("Abcam-ab4729 (SEACR)", "Abcam-ab4729 (MACS2)", "Diagenode 1:50 (SEACR)", "Diagenode 1:50 (MACS2)")
-#labels_SEACR_MACS2_ENCODE = c(labels_SEACR_MACS2, "ENCODE H3K27ac", "ENCODE H3K27me3")
+```{r}
+counts = read.csv(paste0(datadir, "/correlation/H3K27ac_ENCFF044JNJ_overlaps_counts.txt"), sep = "\t", header = FALSE)
+colnames(counts) = c("chr", "start", "end", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak", sampleList_with_ENCODE)
+```
 
+
+```{r}
+# same order as bam list
+counts_corr = counts[11:ncol(counts)] %>% as.matrix() %>% preprocessCore::normalize.quantiles() %>% round() %>% cor(method = "pearson")
+colnames(counts_corr) = sampleList_with_ENCODE
+rownames(counts_corr) = sampleList_with_ENCODE
+
+counts_corr[counts_corr <= 0] = 0
+```
+
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=8}
+counts_rounded = counts_corr %>% round(2)
+heatmap.2(x = counts_rounded, col = "viridis", trace = "none", density.info = "none", cexRow = 1.5, cexCol = 1.5, notecol = "black", lhei = c(2, 11), lwid = c(2, 8), margins = c(20, 20))
+```
+
+
+## Peak-level 
+
+```{r}
 DBA_mixed = NULL
 
-ENCODE_H3K27me3_df = data.frame(ENCODE_H3K27me3)
-ENCODE_H3K27me3_df$peak = seq(1, length(ENCODE_H3K27me3))
-ENCODE_H3K27me3_edit = GenomicRanges::makeGRangesFromDataFrame(ENCODE_H3K27me3_df, keep.extra.columns = TRUE)
-ENCODE_H3K27me3_edit$name = as.character(seq(1, length(ENCODE_H3K27me3)))
-
-SEACR_peaks = c(peakList[seq(1, length(peakList), by = 2)], ENCODE_H3K27ac, ENCODE_H3K27me3)
-SEACR_peaks = setNames(SEACR_peaks, sampleList_with_ENCODE)
-
-MACS2_peaks = c(peakList[seq(2, length(peakList), by = 2)], ENCODE_H3K27ac, ENCODE_H3K27me3)
-MACS2_peaks = setNames(MACS2_peaks, sampleList_with_ENCODE)
-
-
 for(i in 1:length(sampleList_all_with_ENCODE)){
-   DBA_mixed = dba.peakset(DBA = DBA_mixed, peaks = peakList_all_with_ENCODE[[i]], sampID = sampleList_all_with_ENCODE[i])
+   DBA_mixed = DiffBind::dba.peakset(DBA = DBA_mixed, peaks = peakList_with_ENCODE[[i]], sampID = sampleList_all_with_ENCODE[i], peak.format = "bed")
 }
 ```
-
 
 
 ### All peaks
 
 ```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
-DiffBind::dba.plotHeatmap(DBA_mixed, lhei = c(1,5), lwid = c(1,5), keysize = 0.75, cexRow = 1.25, cexCol = 1.25, margin = 30)
+DiffBind::dba.plotHeatmap(DBA_mixed, lhei = c(1,5), lwid = c(1,5), keysize = 0.75, cexRow = 1.25, cexCol = 1.25, margin = 20)
 ```
 
 
-
-# ENCODE H3K27ac/me3 peak overlap
+# CUT&Tag vs ENCODE H3K27ac / H3K27me3 peak overlap
 
 ## C&T peaks in ENCODE
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-ENCODE_H3K27ac_overlapping_CT_peaks = c()
-ENCODE_H3K27me3_overlapping_CT_peaks = c()
-
-for(i in 1:length(peakList)){
-  overlaps_H3K27ac = GenomicRanges::countOverlaps(query = peakList[[i]], subject = ENCODE_H3K27ac)
-  overlaps_H3K27me3 = GenomicRanges::countOverlaps(query = peakList[[i]], subject = ENCODE_H3K27me3)
-  CT_in_ENCODE_H3K27ac = overlaps_H3K27ac[overlaps_H3K27ac != 0] %>% length()
-  CT_in_ENCODE_H3K27me3 = overlaps_H3K27me3[overlaps_H3K27me3 != 0] %>% length()
-  ENCODE_H3K27ac_overlapping_CT_peaks = c(ENCODE_H3K27ac_overlapping_CT_peaks, CT_in_ENCODE_H3K27ac)
-  ENCODE_H3K27me3_overlapping_CT_peaks = c(ENCODE_H3K27me3_overlapping_CT_peaks, CT_in_ENCODE_H3K27me3)
+```{r}
+count_overlaps = function(peak_list, reference){
+  
+  sample_peaks_in_ref = c()
+  
+  for(i in 1:length(peak_list)){
+    overlaps_count = GenomicRanges::countOverlaps(query = peak_list[[i]], subject = reference)
+    sample_in_reference = overlaps_count[overlaps_count != 0] %>% length()
+    sample_peaks_in_ref = c(sample_peaks_in_ref, sample_in_reference)
+  }
+  
+  return(sample_peaks_in_ref)
 }
 
 
-ENCODE_H3K27ac_overlapping_CT_peaks_withDup = c()
-ENCODE_H3K27me3_overlapping_CT_peaks_withDup = c()
+ENCODE_H3K27ac_overlapping_CT_peaks = count_overlaps(peakList, ENCODE_H3K27ac)
+ENCODE_H3K27me3_overlapping_CT_peaks = count_overlaps(peakList, ENCODE_H3K27ac)
+ENCODE_H3K27ac_overlapping_CT_peaks_withDup = count_overlaps(peakList_withDup, ENCODE_H3K27me3)
+ENCODE_H3K27me3_overlapping_CT_peaks_withDup = count_overlaps(peakList_withDup, ENCODE_H3K27me3)
 
-for(i in 1:length(peakList_withDup)){
-  overlaps_H3K27ac = GenomicRanges::countOverlaps(query = peakList_withDup[[i]], subject = ENCODE_H3K27ac)
-  overlaps_H3K27me3 = GenomicRanges::countOverlaps(query = peakList_withDup[[i]], subject = ENCODE_H3K27me3)
-  CT_in_ENCODE_H3K27ac_withDup = overlaps_H3K27ac[overlaps_H3K27ac != 0] %>% length()
-  CT_in_ENCODE_H3K27me3_withDup = overlaps_H3K27me3[overlaps_H3K27me3 != 0] %>% length()
-  ENCODE_H3K27ac_overlapping_CT_peaks_withDup = c(ENCODE_H3K27ac_overlapping_CT_peaks_withDup, CT_in_ENCODE_H3K27ac_withDup)
-  ENCODE_H3K27me3_overlapping_CT_peaks_withDup = c(ENCODE_H3K27me3_overlapping_CT_peaks_withDup, CT_in_ENCODE_H3K27me3_withDup)
-}
 
 CT_in_ENCODE = data.frame(Sample = sampleList_all, CT_peaks_in_ENCODE_H3K27ac = ENCODE_H3K27ac_overlapping_CT_peaks, CT_peaks_in_ENCODE_H3K27me3 = ENCODE_H3K27me3_overlapping_CT_peaks,  CT_peaks_in_ENCODE_H3K27ac_withDup = ENCODE_H3K27ac_overlapping_CT_peaks_withDup, CT_peaks_in_ENCODE_H3K27me3_withDup = ENCODE_H3K27me3_overlapping_CT_peaks_withDup)
 CT_in_ENCODE
@@ -714,7 +513,7 @@ CT_in_ENCODE
 
 Collect C&T peaks in ENCODE:
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 CT_peaks_in_ENCODE_H3K27ac_set = c()
 CT_peaks_in_ENCODE_H3K27me3_set = c()
 
@@ -732,7 +531,7 @@ CT_peaks_in_ENCODE_H3K27me3_set = setNames(CT_peaks_in_ENCODE_H3K27me3_set, samp
 
 Collect C&T peaks not in ENCODE:
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 CT_peaks_not_in_ENCODE_H3K27ac_set = c()
 CT_peaks_not_in_ENCODE_H3K27me3_set = c()
 
@@ -750,31 +549,25 @@ CT_peaks_not_in_ENCODE_H3K27me3_set = setNames(CT_peaks_not_in_ENCODE_H3K27me3_s
 
 ## ENCODE peaks in C&T
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-captured_H3K27ac_ENCODE_list = c()
-captured_H3K27me3_ENCODE_list = c()
-
-for(i in 1:length(peakList)){
-  overlaps_H3K27ac = GenomicRanges::countOverlaps(query = ENCODE_H3K27ac, subject = peakList[[i]])
-  overlaps_H3K27me3 = GenomicRanges::countOverlaps(query = ENCODE_H3K27me3, subject = peakList[[i]])
-  ENCODE_H3K27ac_captured_peaks = overlaps_H3K27ac[overlaps_H3K27ac != 0] %>% length()
-  ENCODE_H3K27me3_captured_peaks = overlaps_H3K27me3[overlaps_H3K27me3 != 0] %>% length()
-  captured_H3K27ac_ENCODE_list = c(captured_H3K27ac_ENCODE_list, ENCODE_H3K27ac_captured_peaks)
-  captured_H3K27me3_ENCODE_list = c(captured_H3K27me3_ENCODE_list, ENCODE_H3K27me3_captured_peaks)
+```{r}
+count_overlaps_rev = function(peak_list, reference){
+  
+  ref_peaks_in_sample = c()
+  
+  for(i in 1:length(peak_list)){
+    overlaps_count = GenomicRanges::countOverlaps(query = reference, subject = peak_list[[i]])
+    reference_in_sample = overlaps_count[overlaps_count != 0] %>% length()
+    ref_peaks_in_sample = c(ref_peaks_in_sample, reference_in_sample)
+  }
+  
+  return(ref_peaks_in_sample)
 }
 
 
-captured_H3K27ac_ENCODE_list_withDup = c()
-captured_H3K27me3_ENCODE_list_withDup = c()
-
-for(i in 1:length(peakList_withDup)){
-  overlaps_H3K27ac = GenomicRanges::countOverlaps(query = ENCODE_H3K27ac, subject = peakList_withDup[[i]])
-  overlaps_H3K27me3 = GenomicRanges::countOverlaps(query = ENCODE_H3K27me3, subject = peakList_withDup[[i]])
-  ENCODE_H3K27ac_captured_peaks_withDup = overlaps_H3K27ac[overlaps_H3K27ac != 0] %>% length()
-  ENCODE_H3K27me3_captured_peaks_withDup = overlaps_H3K27me3[overlaps_H3K27me3 != 0] %>% length()
-  captured_H3K27ac_ENCODE_list_withDup = c(captured_H3K27ac_ENCODE_list_withDup, ENCODE_H3K27ac_captured_peaks_withDup)
-  captured_H3K27me3_ENCODE_list_withDup = c(captured_H3K27me3_ENCODE_list_withDup, ENCODE_H3K27me3_captured_peaks_withDup)
-}
+captured_H3K27ac_ENCODE_list = count_overlaps_rev(reference = ENCODE_H3K27ac, peak_list = peakList)
+captured_H3K27me3_ENCODE_list = count_overlaps_rev(reference = ENCODE_H3K27me3, peak_list = peakList)
+captured_H3K27ac_ENCODE_list_withDup = count_overlaps_rev(reference = ENCODE_H3K27ac, peak_list = peakList_withDup)
+captured_H3K27me3_ENCODE_list_withDup = count_overlaps_rev(reference = ENCODE_H3K27me3, peakList_withDup)
 
 Total_captured_ENCODE_peaks = data.frame(Sample = sampleList_all, ENCODE_H3K27ac_captured_peaks = captured_H3K27ac_ENCODE_list, ENCODE_H3K27me3_captured_peaks = captured_H3K27me3_ENCODE_list, ENCODE_H3K27ac_captured_peaks_withDup = captured_H3K27ac_ENCODE_list_withDup, ENCODE_H3K27me3_captured_peaks_withDup = captured_H3K27me3_ENCODE_list_withDup)
 Total_captured_ENCODE_peaks
@@ -783,7 +576,7 @@ Total_captured_ENCODE_peaks
 
 Collect ENCODE peaks in C&T:
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 ENCODE_H3K27ac_peaks_in_CT_set = c()
 ENCODE_H3K27me3_peaks_in_CT_set = c()
 
@@ -801,7 +594,7 @@ ENCODE_H3K27me3_peaks_in_CT_set = setNames(ENCODE_H3K27me3_peaks_in_CT_set, samp
 
 Collect ENCODE peaks not in C&T:
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 ENCODE_H3K27ac_peaks_not_in_CT_set = c()
 ENCODE_H3K27me3_peaks_not_in_CT_set = c()
 
@@ -819,8 +612,9 @@ ENCODE_H3K27me3_peaks_not_in_CT_set = setNames(ENCODE_H3K27me3_peaks_not_in_CT_s
 
 ## Summarize
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 ENCODE_overlaps = Total_captured_ENCODE_peaks %>% left_join(Total_CT_peaks, by = "Sample") %>% left_join(CT_in_ENCODE, by = "Sample")
+
 
 ENCODE_overlaps$Percentage_of_CT_in_ENCODE_H3K27ac = ENCODE_overlaps$CT_peaks_in_ENCODE_H3K27ac / ENCODE_overlaps$Total_PeakN * 100
 ENCODE_overlaps$Percentage_of_total_ENCODE_H3K27ac = ENCODE_overlaps$ENCODE_H3K27ac_captured_peaks / length(ENCODE_H3K27ac) * 100
@@ -828,57 +622,64 @@ ENCODE_overlaps$Percentage_of_total_ENCODE_H3K27ac = ENCODE_overlaps$ENCODE_H3K2
 ENCODE_overlaps$Percentage_of_CT_in_ENCODE_H3K27me3 = ENCODE_overlaps$CT_peaks_in_ENCODE_H3K27me3 / ENCODE_overlaps$Total_PeakN * 100
 ENCODE_overlaps$Percentage_of_total_ENCODE_H3K27me3 = ENCODE_overlaps$ENCODE_H3K27me3_captured_peaks / length(ENCODE_H3K27me3) * 100
 
+
 ENCODE_overlaps$Percentage_of_CT_in_ENCODE_H3K27ac_withDup = ENCODE_overlaps$CT_peaks_in_ENCODE_H3K27ac_withDup / ENCODE_overlaps$Total_PeakN_withDup * 100
 ENCODE_overlaps$Percentage_of_total_ENCODE_H3K27ac_withDup = ENCODE_overlaps$ENCODE_H3K27ac_captured_peaks_withDup / length(ENCODE_H3K27ac) * 100
 
 ENCODE_overlaps$Percentage_of_CT_in_ENCODE_H3K27me3_withDup = ENCODE_overlaps$CT_peaks_in_ENCODE_H3K27me3_withDup / ENCODE_overlaps$Total_PeakN_withDup * 100
 ENCODE_overlaps$Percentage_of_total_ENCODE_H3K27me3_withDup = ENCODE_overlaps$ENCODE_H3K27me3_captured_peaks_withDup / length(ENCODE_H3K27me3) * 100
+
+
+ENCODE_overlaps
 ```
 
 
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 ENCODE_overlaps_H3K27ac = ENCODE_overlaps[c("Sample", "Percentage_of_CT_in_ENCODE_H3K27ac", "Percentage_of_total_ENCODE_H3K27ac")]
 Percentage_of_CT_in_ENCODE_H3K27ac_SEACR = ENCODE_overlaps_H3K27ac[c(seq(1, nrow(ENCODE_overlaps_H3K27ac), by = 2)),2] 
 Percentage_of_CT_in_ENCODE_H3K27ac_MACS2 = ENCODE_overlaps_H3K27ac[c(seq(2, nrow(ENCODE_overlaps_H3K27ac), by = 2)),2]
-Percentage_of_CT_in_ENCODE_H3K27ac_summary = data.frame(Sample = labels_list, Percentage_of_CT_in_ENCODE_H3K27ac_SEACR = Percentage_of_CT_in_ENCODE_H3K27ac_SEACR, Percentage_of_CT_in_ENCODE_H3K27ac_MACS2 = Percentage_of_CT_in_ENCODE_H3K27ac_MACS2)
+Percentage_of_CT_in_ENCODE_H3K27ac_summary = data.frame(Sample = sampleList, Percentage_of_CT_in_ENCODE_H3K27ac_SEACR = Percentage_of_CT_in_ENCODE_H3K27ac_SEACR, Percentage_of_CT_in_ENCODE_H3K27ac_MACS2 = Percentage_of_CT_in_ENCODE_H3K27ac_MACS2)
 
 Percentage_of_total_ENCODE_H3K27ac_SEACR = ENCODE_overlaps_H3K27ac[c(seq(1, nrow(ENCODE_overlaps_H3K27ac), by = 2)),3] 
 Percentage_of_total_ENCODE_H3K27ac_MACS2 = ENCODE_overlaps_H3K27ac[c(seq(2, nrow(ENCODE_overlaps_H3K27ac), by = 2)),3]
-Percentage_of_total_ENCODE_H3K27ac_summary = data.frame(Sample = labels_list, Percentage_of_total_ENCODE_H3K27ac_SEACR = Percentage_of_total_ENCODE_H3K27ac_SEACR, Percentage_of_total_ENCODE_H3K27ac_MACS2 = Percentage_of_total_ENCODE_H3K27ac_MACS2)
+Percentage_of_total_ENCODE_H3K27ac_summary = data.frame(Sample = sampleList, Percentage_of_total_ENCODE_H3K27ac_SEACR = Percentage_of_total_ENCODE_H3K27ac_SEACR, Percentage_of_total_ENCODE_H3K27ac_MACS2 = Percentage_of_total_ENCODE_H3K27ac_MACS2)
 
 
 ENCODE_overlaps_H3K27me3 = ENCODE_overlaps[c("Sample", "Percentage_of_CT_in_ENCODE_H3K27me3", "Percentage_of_total_ENCODE_H3K27me3")]
 Percentage_of_CT_in_ENCODE_H3K27me3_SEACR = ENCODE_overlaps_H3K27me3[c(seq(1, nrow(ENCODE_overlaps_H3K27me3), by = 2)),2] 
 Percentage_of_CT_in_ENCODE_H3K27me3_MACS2 = ENCODE_overlaps_H3K27me3[c(seq(2, nrow(ENCODE_overlaps_H3K27me3), by = 2)),2]
-Percentage_of_CT_in_ENCODE_H3K27me3_summary = data.frame(Sample = labels_list, Percentage_of_CT_in_ENCODE_H3K27me3_SEACR = Percentage_of_CT_in_ENCODE_H3K27me3_SEACR, Percentage_of_CT_in_ENCODE_H3K27me3_MACS2 = Percentage_of_CT_in_ENCODE_H3K27me3_MACS2)
+Percentage_of_CT_in_ENCODE_H3K27me3_summary = data.frame(Sample = sampleList, Percentage_of_CT_in_ENCODE_H3K27me3_SEACR = Percentage_of_CT_in_ENCODE_H3K27me3_SEACR, Percentage_of_CT_in_ENCODE_H3K27me3_MACS2 = Percentage_of_CT_in_ENCODE_H3K27me3_MACS2)
 
 Percentage_of_total_ENCODE_H3K27me3_SEACR = ENCODE_overlaps_H3K27me3[c(seq(1, nrow(ENCODE_overlaps_H3K27me3), by = 2)),3] 
 Percentage_of_total_ENCODE_H3K27me3_MACS2 = ENCODE_overlaps_H3K27me3[c(seq(2, nrow(ENCODE_overlaps_H3K27me3), by = 2)),3]
-Percentage_of_total_ENCODE_H3K27me3_summary = data.frame(Sample = labels_list, Percentage_of_total_ENCODE_H3K27me3_SEACR = Percentage_of_total_ENCODE_H3K27me3_SEACR, Percentage_of_total_ENCODE_H3K27me3_MACS2 = Percentage_of_total_ENCODE_H3K27me3_MACS2)
+Percentage_of_total_ENCODE_H3K27me3_summary = data.frame(Sample = sampleList, Percentage_of_total_ENCODE_H3K27me3_SEACR = Percentage_of_total_ENCODE_H3K27me3_SEACR, Percentage_of_total_ENCODE_H3K27me3_MACS2 = Percentage_of_total_ENCODE_H3K27me3_MACS2)
 
 
 ENCODE_overlaps_H3K27ac_withDup = ENCODE_overlaps[c("Sample", "Percentage_of_CT_in_ENCODE_H3K27ac_withDup", "Percentage_of_total_ENCODE_H3K27ac_withDup")]
 Percentage_of_CT_in_ENCODE_H3K27ac_withDup_SEACR = ENCODE_overlaps_H3K27ac_withDup[c(seq(1, nrow(ENCODE_overlaps_H3K27ac_withDup), by = 2)),2] 
 Percentage_of_CT_in_ENCODE_H3K27ac_withDup_MACS2 = ENCODE_overlaps_H3K27ac_withDup[c(seq(2, nrow(ENCODE_overlaps_H3K27ac_withDup), by = 2)),2]
-Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary = data.frame(Sample = labels_list, Percentage_of_CT_in_ENCODE_H3K27ac_withDup_SEACR = Percentage_of_CT_in_ENCODE_H3K27ac_withDup_SEACR, Percentage_of_CT_in_ENCODE_H3K27ac_withDup_MACS2 = Percentage_of_CT_in_ENCODE_H3K27ac_withDup_MACS2)
+Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary = data.frame(Sample = sampleList, Percentage_of_CT_in_ENCODE_H3K27ac_withDup_SEACR = Percentage_of_CT_in_ENCODE_H3K27ac_withDup_SEACR, Percentage_of_CT_in_ENCODE_H3K27ac_withDup_MACS2 = Percentage_of_CT_in_ENCODE_H3K27ac_withDup_MACS2)
 
 Percentage_of_total_ENCODE_H3K27ac_withDup_SEACR = ENCODE_overlaps_H3K27ac_withDup[c(seq(1, nrow(ENCODE_overlaps_H3K27ac_withDup), by = 2)),3] 
 Percentage_of_total_ENCODE_H3K27ac_withDup_MACS2 = ENCODE_overlaps_H3K27ac_withDup[c(seq(2, nrow(ENCODE_overlaps_H3K27ac_withDup), by = 2)),3]
-Percentage_of_total_ENCODE_H3K27ac_withDup_summary = data.frame(Sample = labels_list, Percentage_of_total_ENCODE_H3K27ac_withDup_SEACR = Percentage_of_total_ENCODE_H3K27ac_withDup_SEACR, Percentage_of_total_ENCODE_H3K27ac_withDup_MACS2 = Percentage_of_total_ENCODE_H3K27ac_withDup_MACS2)
+Percentage_of_total_ENCODE_H3K27ac_withDup_summary = data.frame(Sample = sampleList, Percentage_of_total_ENCODE_H3K27ac_withDup_SEACR = Percentage_of_total_ENCODE_H3K27ac_withDup_SEACR, Percentage_of_total_ENCODE_H3K27ac_withDup_MACS2 = Percentage_of_total_ENCODE_H3K27ac_withDup_MACS2)
 
 
 ENCODE_overlaps_H3K27me3_withDup = ENCODE_overlaps[c("Sample", "Percentage_of_CT_in_ENCODE_H3K27me3_withDup", "Percentage_of_total_ENCODE_H3K27me3_withDup")]
 Percentage_of_CT_in_ENCODE_H3K27me3_withDup_SEACR = ENCODE_overlaps_H3K27me3_withDup[c(seq(1, nrow(ENCODE_overlaps_H3K27me3_withDup), by = 2)),2] 
 Percentage_of_CT_in_ENCODE_H3K27me3_withDup_MACS2 = ENCODE_overlaps_H3K27me3_withDup[c(seq(2, nrow(ENCODE_overlaps_H3K27me3_withDup), by = 2)),2]
-Percentage_of_CT_in_ENCODE_H3K27me3_withDup_summary = data.frame(Sample = labels_list, Percentage_of_CT_in_ENCODE_H3K27me3_withDup_SEACR = Percentage_of_CT_in_ENCODE_H3K27me3_withDup_SEACR, Percentage_of_CT_in_ENCODE_H3K27me3_withDup_MACS2 = Percentage_of_CT_in_ENCODE_H3K27me3_withDup_MACS2)
+Percentage_of_CT_in_ENCODE_H3K27me3_withDup_summary = data.frame(Sample = sampleList, Percentage_of_CT_in_ENCODE_H3K27me3_withDup_SEACR = Percentage_of_CT_in_ENCODE_H3K27me3_withDup_SEACR, Percentage_of_CT_in_ENCODE_H3K27me3_withDup_MACS2 = Percentage_of_CT_in_ENCODE_H3K27me3_withDup_MACS2)
 
 Percentage_of_total_ENCODE_H3K27me3_withDup_SEACR = ENCODE_overlaps_H3K27me3_withDup[c(seq(1, nrow(ENCODE_overlaps_H3K27me3_withDup), by = 2)),3] 
 Percentage_of_total_ENCODE_H3K27me3_withDup_MACS2 = ENCODE_overlaps_H3K27me3_withDup[c(seq(2, nrow(ENCODE_overlaps_H3K27me3_withDup), by = 2)),3]
-Percentage_of_total_ENCODE_H3K27me3_withDup_summary = data.frame(Sample = labels_list, Percentage_of_total_ENCODE_H3K27me3_withDup_SEACR = Percentage_of_total_ENCODE_H3K27me3_withDup_SEACR, Percentage_of_total_ENCODE_H3K27me3_withDup_MACS2 = Percentage_of_total_ENCODE_H3K27me3_withDup_MACS2)
+Percentage_of_total_ENCODE_H3K27me3_withDup_summary = data.frame(Sample = sampleList, Percentage_of_total_ENCODE_H3K27me3_withDup_SEACR = Percentage_of_total_ENCODE_H3K27me3_withDup_SEACR, Percentage_of_total_ENCODE_H3K27me3_withDup_MACS2 = Percentage_of_total_ENCODE_H3K27me3_withDup_MACS2)
 ```
 
 
-#### Precision/recall metrics
+### Precision/recall metrics
+
+Precision: % of CUT&Tag peaks in ENCODE
+Recall: % of ENCODE peaks captured
 
 ```{r}
 f_measure = data.frame(Sample = sampleList_all)
@@ -891,28 +692,22 @@ f_measure$F1 = f_measure$true_pos/(f_measure$true_pos + 0.5*(f_measure$false_pos
 ```
 
 
-```{r,  fig.width=17, fig.height=10}
+```{r,fig.width=5, fig.height=4}
 f_measure_F1_SEACR_list = f_measure[c(seq(1, nrow(f_measure), by = 2)), 5] 
 f_measure_F1_MACS2_list = f_measure[c(seq(2, nrow(f_measure), by = 2)), 5]
 
-f_measure_F1 = data.frame(Sample = labels_list, SEACR_F1 = f_measure_F1_SEACR_list, MACS2_F1 = f_measure_F1_MACS2_list)
+f_measure_F1 = data.frame(Sample = sampleList, SEACR_F1 = f_measure_F1_SEACR_list, MACS2_F1 = f_measure_F1_MACS2_list)
 f_measure_F1_melt = melt(f_measure_F1, id.vars = "Sample")
 
 F1_plot = ggplot(f_measure_F1_melt, aes(Sample, value)) +
-  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.8) +
-  theme_bw() +
+  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
+  theme_bw(base_size = 15) +
   ylab("F1 score") +
   xlab("") +
-  ggtitle("F-measures of precision and recall") +
-  theme(plot.title = element_text(size = 25)) +
+  ggtitle("F-measures of precision and recall (ENCODE H3K27ac)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 20)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.4, option = "rocket") +
-  theme(plot.margin = unit(c(1,1,1,1), "cm"))
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2"))
 
 F1_plot
 ```
@@ -922,25 +717,24 @@ F1_plot
 
 #### H3K27ac
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=17, fig.height=10}
-#ENCODE_overlaps$Sample = factor(ENCODE_overlaps$Sample, levels = ENCODE_overlaps$Sample)
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
 Percentage_of_CT_in_ENCODE_H3K27ac_summary_melt = melt(Percentage_of_CT_in_ENCODE_H3K27ac_summary, id.vars = "Sample")
 
 Peaks_in_ENCODE_plot = ggplot(Percentage_of_CT_in_ENCODE_H3K27ac_summary_melt, aes(Sample, value)) +
+  theme_bw() +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of peaks in ENCODE") +
-  xlab("Sample") +
+  xlab("") +
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27ac") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
   theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
 
 Peaks_in_ENCODE_plot
@@ -949,20 +743,20 @@ Peaks_in_ENCODE_plot
 Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary_melt = melt(Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary, id.vars = "Sample")
 
 Peaks_in_ENCODE_plot_withDup = ggplot(Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary_melt, aes(Sample, value)) +
+  theme_bw() +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of peaks in ENCODE") +
-  xlab("Sample") +
+  xlab("") +
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27ac (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
-  theme(legend.title = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title = element_text(size = 15)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
 
 Peaks_in_ENCODE_plot_withDup
@@ -971,91 +765,96 @@ Peaks_in_ENCODE_plot_withDup
 
 ##### q values
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=40, fig.height=20}
-ENCODE_H3K27ac_peaks_in_CT_qval = list()
-ENCODE_H3K27ac_peaks_not_in_CT_qval = list()
+```{r}
+master_qvals_df = c()
 
-for(i in 1:length(ENCODE_H3K27ac_peaks_in_CT_set)){
-  peak = ENCODE_H3K27ac_peaks_in_CT_set[[i]] %>% as.data.frame()
-  qval = peak$V9
-  ENCODE_H3K27ac_peaks_in_CT_qval[[i]] = qval
+for(i in 1:length(peakList)){
+  df_captured = data.frame("Sample" = sampleList_all[i], "-log10(qval)" = ENCODE_H3K27ac_peaks_in_CT_set[[i]]$V9, "Captured" = "Captured", check.names = FALSE)
+  df_missed = data.frame("Sample" = sampleList_all[i], "-log10(qval)" = ENCODE_H3K27ac_peaks_not_in_CT_set[[i]]$V9, "Captured" = "Missed", check.names = FALSE)
+  master_qvals_df = rbind(master_qvals_df, rbind(df_captured, df_missed))
 }
 
-for(i in 1:length(ENCODE_H3K27ac_peaks_not_in_CT_set)){
-  peak = ENCODE_H3K27ac_peaks_not_in_CT_set[[i]] %>% as.data.frame()
-  qval = peak$V9
-  ENCODE_H3K27ac_peaks_not_in_CT_qval[[i]] = qval
-}
-
-ENCODE_H3K27ac_peaks_in_CT_qval = setNames(ENCODE_H3K27ac_peaks_in_CT_qval, names(ENCODE_H3K27ac_peaks_in_CT_set))
-ENCODE_H3K27ac_peaks_not_in_CT_qval = setNames(ENCODE_H3K27ac_peaks_not_in_CT_qval, names(ENCODE_H3K27ac_peaks_not_in_CT_set))
-
-master_qval_list = c()
-for(i in 1:length(ENCODE_H3K27ac_peaks_in_CT_qval)){
-  sublist = list(ENCODE_H3K27ac_peaks_in_CT_qval[[i]], ENCODE_H3K27ac_peaks_not_in_CT_qval[[i]])
-  master_qval_list = c(master_qval_list, sublist)
-}
+master_qvals_df_melt = melt(master_qvals_df, id.vars = c("Sample", "Captured"))
 ```
 
 
-```{r, fig.width=40, fig.height=25}
-col1 = rgb(33, 145, 140, max = 255, alpha = 170)
-col2 = rgb(81, 18, 124, max = 255, alpha = 150)
-  
-par(mar = c(65, 5, 5, 5), lwd = 3)
-boxplot(master_qval_list, ylim = c(0, 500), las = 2, outline = FALSE, axes = FALSE, col = (c(col1, col2)), ylab = "")
-axis(side = 1, at = c(seq(1.5, 48.5, by = 2)), las = 2, labels = labels_SEACR_MACS2, cex.axis = 3)
-axis(side = 2, at = c(0, 100, 200, 300, 400, 500), las = 2, cex.axis = 3, pos = 0)
-mtext("-log10(q)", side = 2, line = 1, cex = 3)
-legend(40, 450, legend = c("Captured", "Not captured"), col = c(col1, col2), lwd = 30, cex = 3, title = "ENCODE H3K27ac peaks")
+```{r, fig.height=4, fig.width=8, fig.height = 5}
+ggplot(master_qvals_df_melt, aes(x = value, y = Sample, fill = Captured)) + 
+  theme_bw() +
+  stat_boxplot(geom = "errorbar") + 
+  geom_boxplot(outlier.shape = NA) +
+  coord_cartesian(xlim = c(1, 250)) +
+  ylab("") +
+  xlab("-log10(q-val)") +
+  labs(fill = "ENCODE H3K27ac peaks") +
+  theme(legend.position = "bottom") +
+  theme(text = element_text(size = 25))
+```
+
+
+```{r}
+tests = list()
+
+for(i in 1:length(sampleList_all)){
+  captured = master_qvals_df[(master_qvals_df$Sample == sampleList_all[i] & master_qvals_df$Captured == "Captured"),]
+  missed = master_qvals_df[(master_qvals_df$Sample == sampleList_all[i] & master_qvals_df$Captured == "Missed"),]
+  var_test = var.test(captured$`-log10(qval)`, missed$`-log10(qval)`)
+  var = ifelse(var_test$p.value < 0.05, FALSE, TRUE)
+  test = t.test(captured$`-log10(qval)`, missed$`-log10(qval)`, var.equal = var, paired = FALSE, alternative = c("two.sided"))
+  #tests[i] = ifelse(test$p.value < 0.05, "significant", "insignificant")
+  tests[[i]] = test
+  }
+
+names(tests) = sampleList_all
+tests
 ```
 
 
 #### H3K27me3
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=17, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
 Percentage_of_CT_in_ENCODE_H3K27me3_summary_melt = melt(Percentage_of_CT_in_ENCODE_H3K27me3_summary, id.vars = "Sample")
 
-Peaks_in_ENCODE_plot_H3K27me3 = ggplot(Percentage_of_CT_in_ENCODE_H3K27me3_summary_melt, aes(Sample, value)) +
+Peaks_in_ENCODE_H3K27me3_plot = ggplot(Percentage_of_CT_in_ENCODE_H3K27me3_summary_melt, aes(Sample, value)) +
+  theme_bw() +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of peaks in ENCODE") +
-  xlab("Sample") +
-  ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27me3")+
+  xlab("") +
+  ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27me3") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
   theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
 
-Peaks_in_ENCODE_plot_H3K27me3
+Peaks_in_ENCODE_H3K27me3_plot
 
 
 Percentage_of_CT_in_ENCODE_H3K27me3_withDup_summary_melt = melt(Percentage_of_CT_in_ENCODE_H3K27me3_withDup_summary, id.vars = "Sample")
 
-Peaks_in_ENCODE_plot_H3K27me3_withDup = ggplot(Percentage_of_CT_in_ENCODE_H3K27me3_withDup_summary_melt, aes(Sample, value)) +
+Peaks_in_ENCODE_H3K27me3_plot_withDup = ggplot(Percentage_of_CT_in_ENCODE_H3K27me3_withDup_summary_melt, aes(Sample, value)) +
+  theme_bw() +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of peaks in ENCODE") +
-  xlab("Sample") +
+  xlab("") +
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27me3 (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
-  theme(legend.title = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title = element_text(size = 15)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
 
-Peaks_in_ENCODE_plot_H3K27me3_withDup
+Peaks_in_ENCODE_H3K27me3_plot_withDup
 ```
 
 
@@ -1063,25 +862,24 @@ Peaks_in_ENCODE_plot_H3K27me3_withDup
 
 #### H3K27ac
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=17, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
 Percentage_of_total_ENCODE_H3K27ac_summary_melt = melt(Percentage_of_total_ENCODE_H3K27ac_summary, id.vars = "Sample")
 
 ENCODE_in_CT_plot = ggplot(Percentage_of_total_ENCODE_H3K27ac_summary_melt, aes(Sample, value)) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
   theme_bw() +
-  ylab("% of ENCODE captured") +
+  ylab("% of ENCODE peaks captured") +
   xlab("Sample") +
   ggtitle("Proportion of ENCODE H3K27ac peaks captured by CUT&Tag") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
   theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
-  theme(plot.margin = unit(c(1,1,1,1), "cm"))
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) 
 
 ENCODE_in_CT_plot
 
@@ -1092,18 +890,17 @@ ENCODE_in_CT_plot_withDup = ggplot(Percentage_of_total_ENCODE_H3K27ac_withDup_su
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
   theme_bw() +
-  ylab("% of ENCODE captured") +
+  ylab("% of ENCODE peaks captured") +
   xlab("Sample") +
   ggtitle("Proportion of ENCODE H3K27ac peaks captured by CUT&Tag (with duplicates)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
   theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
-  theme(plot.margin = unit(c(1,1,1,1), "cm"))
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) 
 
 ENCODE_in_CT_plot_withDup
 ```
@@ -1111,25 +908,24 @@ ENCODE_in_CT_plot_withDup
 
 #### H3K27me3
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=17, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
 Percentage_of_total_ENCODE_H3K27me3_summary_melt = melt(Percentage_of_total_ENCODE_H3K27me3_summary, id.vars = "Sample")
 
 ENCODE_in_CT_H3K27me3_plot = ggplot(Percentage_of_total_ENCODE_H3K27me3_summary_melt, aes(Sample, value)) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
   theme_bw() +
-  ylab("% of ENCODE captured") +
-  xlab("Sample") +
+  ylab("% of ENCODE peaks captured") +
+  xlab("") +
   ggtitle("Proportion of ENCODE H3K27me3 peaks captured by CUT&Tag") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
   theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
-  theme(plot.margin = unit(c(1,1,1,1), "cm"))
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2"))
 
 ENCODE_in_CT_H3K27me3_plot
 
@@ -1140,81 +936,20 @@ ENCODE_in_CT_H3K27me3_plot_withDup = ggplot(Percentage_of_total_ENCODE_H3K27me3_
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
   theme_bw() +
-  ylab("% of ENCODE captured") +
-  xlab("Sample") +
+  ylab("% of ENCODE peaks captured") +
+  xlab("") +
   ggtitle("Proportion of ENCODE H3K27me3 peaks captured by CUT&Tag (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20)) +
+  theme(legend.text = element_text(size = 15)) +
   theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "Peak caller", labels = c("SEACR", "MACS2"), discrete = TRUE, begin = 0.1, end = 0.5, option = "viridis") +
-  theme(plot.margin = unit(c(1,1,1,1), "cm"))
+  scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2"))
 
 ENCODE_in_CT_H3K27me3_plot_withDup
 ```
-
-
-### Significance of peak overlap
-
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=15, fig.height=7}
-peakFiles_list_SEACR = list.files(path = "/rds/general/user/la420/home/CUTnTAG/antibodies/all_peaks", pattern = "\\SEACR.bed$", all.files = FALSE, full.names = TRUE, recursive = FALSE, ignore.case = FALSE, include.dirs = FALSE)
-
-peakFiles_list_MACS2 = list.files(path = "/rds/general/user/la420/home/CUTnTAG/antibodies/all_peaks", pattern = "\\SEACR.bed$", all.files = FALSE, full.names = TRUE, recursive = FALSE, ignore.case = FALSE, include.dirs = FALSE)
-
-
-ENCODE_H3K27ac_path = file.path("/rds/general/user/la420/home/CUTnTAG/antibodies/all_peaks/ENCODE/H3K27ac_ENCFF044JNJ.bed.narrowPeak")
-ENCODE_H3K27me3_path = file.path("/rds/general/user/la420/home/CUTnTAG/antibodies/all_peaks/ENCODE/H3K27me3_ENCFF126QYP.bed.narrowPeak")
-
-txdb = TxDb.Hsapiens.UCSC.hg19.knownGene 
-
-testOverlap_H3K27ac = function(qPeak){
-  ChIPseeker::enrichPeakOverlap(queryPeak = qPeak,
-                                targetPeak = ENCODE_H3K27ac_path,
-                                TxDb = txdb,
-                                pAdjustMethod = "BH",
-                                nShuffle = 500,
-                                chainFile = NULL,
-                                verbose = F)
-}
-
-testOverlap_H3K27me3 = function(qPeak){
-  ChIPseeker::enrichPeakOverlap(queryPeak = qPeak, 
-                                targetPeak = ENCODE_H3K27me3_path,
-                                TxDb = txdb,
-                                pAdjustMethod = "BH",
-                                nShuffle = 500,
-                                chainFile = NULL,
-                                verbose = F)
-}
-```
-
-
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
-test_H3K27ac_SEACR = lapply(peakFiles_list_SEACR, testOverlap_H3K27ac) %>% bind_rows()
-test_H3K27ac_SEACR
-```
-
-
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
-test_H3K27ac_MACS2 = lapply(peakFiles_list_MACS2, testOverlap_H3K27ac) %>% bind_rows()
-test_H3K27ac_MACS2
-```
-
-
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
-test_H3K27me3_SEACR = lapply(peakFiles_list_SEACR, testOverlap_H3K27me3) %>% bind_rows()
-test_H3K27me3_SEACR
-```
-
-
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
-test_H3K27me3_MACS2 = lapply(peakFiles_list_MACS2, testOverlap_H3K27me3) %>% bind_rows()
-test_H3K27me3_MACS2
-```
-
 
 
 # Heatmaps
@@ -1223,7 +958,7 @@ test_H3K27me3_MACS2
 
 All samples scaled to 2 million reads
 
-![Heatmap_hg19](/rds/general/user/la420/home/CUTnTAG/antibodies/bam/heatmaps2/heatmap_txn_units/heatmap_transcription_units_2_one_mate_viridis.png)
+![Heatmap_hg19](/Volumes/test_data/heatmap/transcription_units/heatmap_transcription_units_one_mate.png)
 
 
 ## Heatmaps over peaks    {.tabset} 
@@ -1234,79 +969,29 @@ All samples scaled to 2 million total reads
 ### SEACR
 
 ```{r, echo=FALSE, out.width="12%", fig.show="hold"}
-heatmap_dir = "/rds/general/user/la420/home/CUTnTAG/antibodies/bam/heatmaps2/heatmap_all_peaks/one_mate/"
-
 knitr::include_graphics(
-  c(paste0(heatmap_dir, "Abcam-ab4729_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "Diagenode_50x_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "Abcam-ab177178_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8383508_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8383507_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8383508_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8581604_CnR_ds_one_mate_SEACR_heatmap.png"), 
-    paste0(heatmap_dir, "H3K27ac_ENCSR000AKP_ds_MACS2_heatmap.png")
-))
-
-
-knitr::include_graphics(
-  c(paste0(heatmap_dir, "H3K27me3_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27me3_SRR11074238_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27me3_SRR11074239_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27me3_SRR9073702_CnR_ds_one_mate_SEACR_heatmap.png"),
-    paste0(heatmap_dir, "H3K27me3_ENCSR000EWB_ds_MACS2_heatmap.png")
-))
+  c(paste0(datadir, "/heatmap/peak_summits/Diagenode_C15410196_1_50_2M_one_mate_SEACR_heatmap.png"),
+    paste0(datadir, "/heatmap/peak_summits/CST9733_1_100_H3K27me3_2M_one_mate_SEACR_heatmap.png"),
+    paste0(datadir, "/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_one_mate_MACS2_heatmap.png")
+  ))
 ```
 
 
 ### MACS2
-
-* Note: cannot make heatmaps with read enrichment around broad peaks since broad peak calling does not yield summit files
-
 ```{r, echo=FALSE, out.width="12%", fig.show="hold"}
+# note: cannot make heatmaps with read enrichment around broad peaks since broad peak calling does not yield summit files
 knitr::include_graphics(
-  c(paste0(heatmap_dir, "Abcam-ab4729_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "Diagenode_50x_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "Abcam-ab177178_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8383508_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8383507_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8383508_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_SRR8581604_CnR_ds_one_mate_MACS2_heatmap.png"),
-    paste0(heatmap_dir, "H3K27ac_ENCSR000AKP_ds_MACS2_heatmap.png")))
-
-#knitr::include_graphics(
-#  c(paste0(heatmap_dir, "H3K27me3_ds_one_mate_MACS2_heatmap.png"),
-#  paste0(heatmap_dir, "H3K27me3_SRR11074238_ds_one_mate_MACS2_heatmap.png"),
-#  paste0(heatmap_dir, "H3K27me3_SRR11074239_ds_one_mate_MACS2_heatmap.png"),
-#  paste0(heatmap_dir, "H3K27me3_SRR9073702_CnR_ds_one_mate_MACS2_heatmap.png"),
-#  paste0(heatmap_dir, "H3K27me3_ENCSR000EWB_ds_MACS2_heatmap.png")))
+  c(paste0(datadir, "/heatmap/peak_summits/Diagenode_C15410196_1_50_2M_one_mate_MACS2_heatmap.png"),
+    paste0(datadir, "/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_one_mate_MACS2_heatmap.png")
+  ))
 ```
-
 
 
 # Annotation
 
-```{r}
-#re-order the samples
-sampleList_with_ENCODE_cut_reordered = c("ActiveMotif_SEACR", "ActiveMotif_MACS2", "Diagenode_100x_SEACR", "Diagenode_100x_MACS2", "Diagenode_50x_SEACR", "Diagenode_50x_MACS2", "Abcam-ab177178_SEACR", "Abcam-ab177178_MACS2", "Abcam-ab4729_SEACR", "Abcam-ab4729_MACS2", "H3K27ac_SRR8383508_SEACR", "H3K27ac_SRR8383508_MACS2", "H3K27ac_SRR8581604_CnR_SEACR", "H3K27ac_SRR8581604_CnR_MACS2", "ENCODE_H3K27ac", "H3K27me3_SEACR", "H3K27me3_MACS2", "H3K27me3_SRR11074238_SEACR", "H3K27me3_SRR11074238_MACS2", "H3K27me3_SRR9073702_CnR_SEACR", "H3K27me3_SRR9073702_CnR_MACS2", "ENCODE_H3K27me3")
-
-sampleList_without_ENCODE_cut_reordered = c("ActiveMotif_SEACR", "ActiveMotif_MACS2", "Diagenode_100x_SEACR", "Diagenode_100x_MACS2", "Diagenode_50x_SEACR", "Diagenode_50x_MACS2", "Abcam-ab177178_SEACR", "Abcam-ab177178_MACS2", "Abcam-ab4729_SEACR", "Abcam-ab4729_MACS2", "H3K27ac_SRR8383508_SEACR", "H3K27ac_SRR8383508_MACS2", "H3K27ac_SRR8581604_CnR_SEACR", "H3K27ac_SRR8581604_CnR_MACS2", "H3K27me3_SEACR", "H3K27me3_MACS2", "H3K27me3_SRR11074238_SEACR", "H3K27me3_SRR11074238_MACS2", "H3K27me3_SRR9073702_CnR_SEACR", "H3K27me3_SRR9073702_CnR_MACS2")
-
-peakList_with_ENCODE_anno = peakList_with_ENCODE[sampleList_with_ENCODE_cut_reordered]
-peakList_without_ENCODE_anno = peakList_with_ENCODE[sampleList_without_ENCODE_cut_reordered]
-CT_peaks_in_ENCODE_H3K27ac_set_anno = CT_peaks_in_ENCODE_H3K27ac_set[sampleList_without_ENCODE_cut_reordered]
-
-
-sampleNames_with_ENCODE_cut_reordered = c("ActiveMotif (SEACR)", "ActiveMotif (MACS2)", "Diagenode 1:100 (SEACR)", "Diagenode 1:100 (MACS2)", "Diagenode 1:50 (SEACR)", "Diagenode 1:50 (MACS2)", "Abcam-ab177178 (SEACR)", "Abcam-ab177178 (MACS2)", "Abcam-ab4729 (SEACR)", "Abcam-ab4729 (MACS2)", "H3K27ac Kaya-Okur (C&T) (SEACR)", "H3K27ac Kaya-Okur (C&T) (MACS2)", "H3K27ac Meers (C&R) (SEACR)", "H3K27ac Meers (C&R) (MACS2)", "ENCODE H3K27ac", "H3K27me3 (SEACR)", "H3K27me3 (MACS2)", "H3K27me3 Kaya-Okur (C&T) (SEACR)", "H3K27me3 Kaya-Okur (C&T) (MACS2)", "H3K27me3 Meers (C&R) (SEACR)", "H3K27me3 Meers (C&R) (MACS2)", "ENCODE H3K27me3")
-
-sampleNames_without_ENCODE_cut_reordered = c("ActiveMotif (SEACR)", "ActiveMotif (MACS2)", "Diagenode 1:100 (SEACR)", "Diagenode 1:100 (MACS2)", "Diagenode 1:50 (SEACR)", "Diagenode 1:50 (MACS2)", "Abcam-ab177178 (SEACR)", "Abcam-ab177178 (MACS2)", "Abcam-ab4729 (SEACR)", "Abcam-ab4729 (MACS2)", "H3K27ac Kaya-Okur (C&T) (SEACR)", "H3K27ac Kaya-Okur (C&T) (MACS2)", "H3K27ac Meers (C&R) (SEACR)", "H3K27ac Meers (C&R) (MACS2)", "H3K27me3 (SEACR)", "H3K27me3 (MACS2)", "H3K27me3 Kaya-Okur (C&T) (SEACR)", "H3K27me3 Kaya-Okur (C&T) (MACS2)", "H3K27me3 Meers (C&R) (SEACR)", "H3K27me3 Meers (C&R) (MACS2)")
-
-peakList_with_ENCODE_anno = setNames(peakList_with_ENCODE_anno, sampleNames_with_ENCODE_cut_reordered)
-```
-
-
 ## ChromHMM    {.tabset}
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 chrHMM_url = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeBroadHmm/wgEncodeBroadHmmK562HMM.bed.gz"
 #chrHMM_url = "https://www.encodeproject.org/files/ENCFF163QUM/@@download/ENCFF163QUM.bed.gz"
 
@@ -1314,32 +999,29 @@ chrHMM = genomation::readBed(chrHMM_url)
 chrHMM_list = GenomicRanges::split(chrHMM, chrHMM$name, drop = TRUE) 
 
 chrHMM_names = c("Transcription elongation [10]", "Weak transcription [11]", "Repressed [12]", "Heterochromatin [13]", "Repetitive [14]", "Repetitive [15]", "Active promoter [1]", "Weak promoter [2]", "Poised promoter [3]", "Strong enhancer [4]", "Strong enhancer [5]",  "Weak enhancer [6]", "Weak enhancer [7]", "Insulator [8]", "Transcription transition [9]")
-chrHMM_list = setNames(chrHMM_list, chrHMM_names)
+names(chrHMM_list) = chrHMM_names
 ```
 
 
 ### All samples
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
-annotation = genomation::annotateWithFeatures(GenomicRanges::GRangesList(peakList_with_ENCODE_anno), chrHMM_list)
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
+annotation = genomation::annotateWithFeatures(GenomicRanges::GRangesList(peakList_with_ENCODE), chrHMM_list)
 matrix = genomation::heatTargetAnnotation(annotation, plot = FALSE, precedence = FALSE)
 
-rownames(matrix) = sampleNames_with_ENCODE_cut_reordered
+rownames(matrix) = sampleList_all_with_ENCODE
 colnames(matrix) = chrHMM_names
 matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
@@ -1347,7 +1029,7 @@ ggplot(matrix_melt) +
 
 Obtain duplicate-only peaks:
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+```{r}
 duplicate_only_peaks = c()
 
 for(i in 1:length(peakList)){
@@ -1355,697 +1037,140 @@ for(i in 1:length(peakList)){
   duplicate_only_peaks = c(duplicate_only_peaks, dup_only)
 }
 
-duplicate_only_peaks = setNames(duplicate_only_peaks, sampleList_all)
-duplicate_only_peaks = duplicate_only_peaks[c(sampleList_without_ENCODE_cut_reordered)]
+names(duplicate_only_peaks) = names(peakList)
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
 annotation_dup_only = genomation::annotateWithFeatures(GenomicRanges::GRangesList(duplicate_only_peaks), chrHMM_list)
 matrix = genomation::heatTargetAnnotation(annotation_dup_only, plot = FALSE)
 
-rownames(matrix) = sampleNames_without_ENCODE_cut_reordered
+rownames(matrix) = sampleList_all
 colnames(matrix) = chrHMM_names
 matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
 ### C&T peaks in ENCODE H3K27ac
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
-annotation_in_ENCODE_H3K27ac = genomation::annotateWithFeatures(GenomicRanges::GRangesList(CT_peaks_in_ENCODE_H3K27ac_set_anno), chrHMM_list)
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
+annotation_in_ENCODE_H3K27ac = genomation::annotateWithFeatures(GenomicRanges::GRangesList(CT_peaks_in_ENCODE_H3K27ac_set), chrHMM_list)
 
 matrix = genomation::heatTargetAnnotation(annotation_in_ENCODE_H3K27ac, plot = FALSE)
 
-rownames(matrix) = sampleNames_without_ENCODE_cut_reordered
+rownames(matrix) = sampleList_all
 colnames(matrix) = chrHMM_names
 matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
 ### C&T peaks not in ENCODE H3K27ac
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
-CT_peaks_not_in_ENCODE_H3K27ac_set = CT_peaks_not_in_ENCODE_H3K27ac_set[sampleList_without_ENCODE_cut_reordered]
-CT_peaks_not_in_ENCODE_H3K27ac_set = setNames(CT_peaks_not_in_ENCODE_H3K27ac_set, sampleList_without_ENCODE_cut_reordered)
-
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
 annotation_not_in_ENCODE_H3K27ac = genomation::annotateWithFeatures(GenomicRanges::GRangesList(CT_peaks_not_in_ENCODE_H3K27ac_set), chrHMM_list)
 
 matrix = genomation::heatTargetAnnotation(annotation_not_in_ENCODE_H3K27ac, plot = FALSE)
 
-rownames(matrix) = sampleNames_without_ENCODE_cut_reordered
+rownames(matrix) = sampleList_all
 colnames(matrix) = chrHMM_names
 matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
 ### ENCODE H3K27ac peaks in C&T
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
 annotation_in_CT_H3K27ac = genomation::annotateWithFeatures(GenomicRanges::GRangesList(ENCODE_H3K27ac_peaks_in_CT_set), chrHMM_list)
 
 matrix = genomation::heatTargetAnnotation(annotation_in_CT_H3K27ac, plot = FALSE)
 
-#rownames(matrix) = labels_SEACR_MACS2_ENCODE
 colnames(matrix) = chrHMM_names
 matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
 ### ENCODE H3K27ac peaks not in C&T
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
 annotation_not_in_CT_H3K27ac = genomation::annotateWithFeatures(GenomicRanges::GRangesList(ENCODE_H3K27ac_peaks_not_in_CT_set), chrHMM_list)
 
 matrix = genomation::heatTargetAnnotation(annotation_not_in_CT_H3K27ac, plot = FALSE)
 
-#rownames(matrix) = labels_SEACR_MACS2_ENCODE
 colnames(matrix) = chrHMM_names
 matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
-## ChIPseeker    {.tabset}
-
-### annoBar
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakAnnoList = lapply(peakList_with_ENCODE_anno, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
-
-ChIPseeker::plotAnnoBar(peakAnnoList)
-```
-
-
-
-# Enrichment analysis
-
-## clusterProfiler
-
-### KEGG
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=55, fig.height=65}
-peakAnnoList = lapply(peakList_with_ENCODE_anno, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
-
-genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
-names(genes) = sub("_", "\n", names(genes))
-compKEGG = clusterProfiler::compareCluster(geneCluster = genes,
-                                           fun = "enrichKEGG",
-                                           pvalueCutoff = 0.05,
-                                           pAdjustMethod = "BH")
-
-clusterProfiler::dotplot(compKEGG, showCategory = 10, title = "KEGG Pathway Enrichment Analysis") + theme_bw(base_size = 40) + theme(plot.title = element_text(size = 45)) + ggpubr::rotate_x_text(angle = 45) + theme(legend.key.size = unit(1.5, "cm")) + scale_size_area(max_size = 15)
-```
-
-
-### GO
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=70, fig.height=90}
-peakAnnoList = lapply(peakList_with_ENCODE_anno, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
-
-genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
-names(genes) = sub("_", "\n", names(genes))
-compGO = clusterProfiler::compareCluster(geneCluster = genes,
-                                           OrgDb = "org.Hs.eg.db", 
-                                           fun = "enrichGO",
-                                           pvalueCutoff = 0.05,
-                                           pAdjustMethod = "BH")
-
-clusterProfiler::dotplot(compGO, showCategory = 10, title = "GO Enrichment Analysis") +
-  theme_bw(base_size = 40) +
-  scale_y_discrete(labels = function(y){str_wrap(y, width = 40)}) +
-  scale_x_discrete(labels = function(x){str_wrap(x, width = 100)}) +
-  theme(plot.title = element_text(size = 65)) +
-  ggtitle("Gene Ontology enrichment analysis") +
-  ggpubr::rotate_x_text(angle = 45) +
-  scale_size_area(max_size = 15) +
-  theme(legend.key.size = unit(2, "cm")) +
-  theme(legend.position = "right") +
-  theme(legend.text = element_text(size = 45)) +
-  theme(legend.title = element_text(size = 50)) +
-  theme(axis.text = element_text(size = 55))
-```
-
-
-## ReactomePA
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, out.width="49%", out.height="49%", fig.show="hold"}
-pathways = list()
-
-for(peak in peakList_with_ENCODE){
-  gene = ChIPseeker::seq2gene(peak, tssRegion = c(-3000, 3000), flankDistance = 3000, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene)
-  pathway = ReactomePA::enrichPathway(gene)
-  pathways = c(pathways, pathway)
-}
-
-pathways = setNames(pathways, sampleList_all_with_ENCODE)
-```
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, out.width="49%", out.height="49%", fig.show="hold"}
-pathways = list()
-geneList = list()
-
-for(i in 1:length(peakList_with_ENCODE)){
-  gene = ChIPseeker::seq2gene(peakList_with_ENCODE[[i]], tssRegion = c(-3000, 3000), flankDistance = 3000, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene)
-  geneList[[i]] = gene
-  pathway = ReactomePA::enrichPathway(gene)
-  pathways[[i]] = pathway
-}
-
-pathways = setNames(pathways, sampleList_all_with_ENCODE)
-geneList = setNames(geneList, labels_SEACR_MACS2_ENCODE)
-```
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=50, fig.height=55}
-ReactomePA_comp = clusterProfiler::compareCluster(geneList, fun = "enrichPathway")
-
-clusterProfiler::dotplot(ReactomePA_comp, showCategory = 5) +
-  theme_bw() +
-  scale_y_discrete(labels = function(y){str_wrap(y, width = 55)}) +
-  scale_x_discrete(labels = function(x){str_wrap(x, width = 100)}) +
-  ggpubr::rotate_x_text(angle = 30) +
-  theme(axis.text.x = element_text(size = 35)) +
-  theme(axis.text.y = element_text(size = 35)) +
-  ggtitle("Reactome Pathway Analysis") +
-  theme(plot.title = element_text(size = 60)) +
-  scale_size_area(max_size = 12.5) +
-  theme(legend.key.size = unit(4, "cm")) +
-  theme(legend.key.width = unit(3, "cm")) +
-  theme(legend.position = "bottom") +
-  theme(legend.text = element_text(size = 30)) +
-  theme(legend.title = element_text(size = 30))
-```
-
-
-# Motifs
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=5, fig.height=10}
-motifdir = "/rds/general/user/la420/home/CUTnTAG/antibodies/motifs/"
-
-#SEACR_list_with_ENCODE = c("ActiveMotif_SEACR", "ActiveMotif_H3K27ac_SEACR", "Diagenode_100x_SEACR", "Diagenode_50x_SEACR", "Abcam-ab177178_SEACR", "Abcam-ab4729_SEACR", "H3K27me3_SEACR", "H3K27ac_SRR8383507_SEACR", "H3K27ac_SRR8383508_SEACR", "H3K27ac_SRR8581604_CnR_SEACR", "H3K27me3_SRR11074238_SEACR", "H3K27me3_SRR11074239_SEACR", "H3K27me3_SRR9073702_CnR_SEACR", "ENCODE_H3K27ac", "ENCODE_H3K27me3")
-
-motifs = list()
-
-for(i in 1:length(sampleList_all_with_ENCODE)){
-  motif = marge::read_known_results(path = paste0("/rds/general/user/la420/home/CUTnTAG/antibodies/motifs/", sampleList_all_with_ENCODE[i], "_1000"), homer_dir = TRUE)
-  motifs[[i]] = motif[order(-motif$log_p_value), ]
-}
-
-motifs = setNames(motifs, sampleList_all_with_ENCODE)
-
-#in some cases top -log(p) values are infinite (especially for ENCODE H3K27ac), so will set them to the maximum -log(p) attained by other samples
-for(i in 1:length(sampleList_all_with_ENCODE)){
-  motifs[[i]]$log_p_value[(motifs[[i]]$log_p_value == "Inf")] = 300
-}
-
-#re-order to put ac and me3 samples together
-motifs = motifs[c("ActiveMotif_SEACR", "ActiveMotif_MACS2", "Diagenode_100x_SEACR", "Diagenode_100x_MACS2", "Diagenode_50x_SEACR", "Diagenode_50x_MACS2", "Abcam-ab177178_SEACR", "Abcam-ab177178_MACS2", "Abcam-ab4729_SEACR", "Abcam-ab4729_MACS2", "H3K27ac_SRR8383508_SEACR", "H3K27ac_SRR8383508_MACS2", "H3K27ac_SRR8581604_CnR_SEACR", "H3K27ac_SRR8581604_CnR_MACS2", "ENCODE_H3K27ac", "H3K27me3_SEACR", "H3K27me3_MACS2", "H3K27me3_SRR11074238_SEACR", "H3K27me3_SRR11074238_MACS2", "H3K27me3_SRR9073702_CnR_SEACR", "H3K27me3_SRR9073702_CnR_MACS2", "ENCODE_H3K27me3")]
-
-sampleList_all_with_ENCODE_reordered = c("ActiveMotif (SEACR)", "ActiveMotif (MACS2)", "Diagenode 1:100 (SEACR)", "Diagenode 1:100 (MACS2)", "Diagenode 1:50 (SEACR)", "Diagenode 1:50 (MACS2)", "Abcam-ab177178 (SEACR)", "Abcam-ab177178 (MACS2)", "Abcam-ab4729 (SEACR)", "Abcam-ab4729 (MACS2)", "H3K27ac Kaya-Okur (C&T) (SEACR)", "H3K27ac Kaya-Okur (C&T) (MACS2)", "H3K27ac Meers (C&R) (SEACR)", "H3K27ac Meers (C&R) (MACS2)", "ENCODE H3K27ac", "H3K27me3 (SEACR)", "H3K27me3 (MACS2)", "H3K27me3 Kaya-Okur (C&T) (SEACR)", "H3K27me3 Kaya-Okur (C&T) (MACS2)", "H3K27me3 Meers (C&R) (SEACR)", "H3K27me3 Meers (C&R) (MACS2)", "ENCODE H3K27me3")
-```
-
-
-## By motif family
-
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=40, fig.height=60}
-tbl_summaries = list()
-for(i in 1:length(sampleList_all_with_ENCODE_reordered)){
-  motifs[[i]]$Sample = sampleList_all_with_ENCODE_reordered[i]
-  tbl_summary = motifs[[i]] %>% group_by(Sample, motif_family) %>% summarise(top_log_p_value = max(log_p_value)) %>% ungroup()
-  tbl_summaries[[i]] = tbl_summary
-}
-
-tbl_results = data.table::rbindlist(tbl_summaries)
-
-#labels_list_motifs = c("H3K27me3 Meers SRR9073702 (C&R)", "H3K27me3 Kaya-Okur SRR11074239 (C&T)", "H3K27me3 Kaya-Okur SRR11074238 (C&T)", "H3K27me3", "H3K27ac Meers SRR8581604 (C&R)", "H3K27ac Kaya-Okur SRR8383508 (C&T)", "H3K27ac Kaya-Okur SRR8383507 (C&T)", "ENCODE H3K27me3", "ENCODE H3K27ac", "Diagenode 1:50", "Diagenode 1:100", "Active Motif", "Active Motif (official)", "Abcam-ab4729", "Abcam-ab177178")
-
-
-tbl_results$Sample = factor(tbl_results$Sample, levels = unique(tbl_results$Sample))
-
-tbl_results %>% ggplot(aes(x = Sample, y = motif_family, fill = top_log_p_value)) +
-  geom_tile() +
-  scale_fill_viridis() +
-  scale_color_viridis() +
-  ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 40)) +
-  theme(axis.title = element_text(size = 40)) +
-  ylab("Motif family") +
-  xlab("") +
-  theme(legend.title = element_text("Top log p value", size = 35)) +
-  theme(legend.key.size = unit(1.5, "cm")) +
-  theme(legend.text = element_text(size = 40)) 
-```
-
-
-## All motifs
-
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=18, fig.height=27}
-motif_summary = c()
-
-for(i in 1:length(motifs)){
-  table = motifs[[i]]
-  top_motifs = table[1:15,1] %>% unname
-  p_vals = table[1:15,7] %>% unname
-  motif_summary = data.frame(Sample = sampleList_all_with_ENCODE_reordered[i], Top_motifs = top_motifs, log_p_value = p_vals) %>% rbind(motif_summary, .)
-}
-
-motif_summary$Sample = factor(motif_summary$Sample, levels = unique(motif_summary$Sample))
-
-ggplot(motif_summary) +
-  geom_point(aes(x = Sample, y = Top_motifs, size = log_p_value, color = log_p_value)) +
-  theme_bw() +
-  xlab("") +
-  ylab("") +
-  theme(legend.title = element_text(size = 15)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(axis.text = element_text(size = 18)) +
-  ggpubr::rotate_x_text(angle = 45) +
-  theme(plot.margin = unit(c(0.5,0,0,2), "cm")) 
-```
-
-
-
-# ATAC-seq reads in captured vs missed ENCODE peaks
-
-49677798 total ATAC-seq single-end reads
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-#bamFile = "/rds/general/user/la420/home/CUTnTAG/antibodies/correlation/ENCODE_peak_files/bam/DNase_ENCFF826DJP.bam"
-#DNase causing errors so using ATAC reads instead
-
-bamFile = "/rds/general/user/la420/home/CUTnTAG/ATACseq/nfcore/results/bwa/mergedLibrary/K562_ATACseq_R1.mLb.clN.sorted.bam"
-ATAC_in_captured_ENCODE_inPeakData = c()
-
-for(i in 1:length(sampleList_all)){
-  peakRes = data.frame(ENCODE_H3K27ac_peaks_in_CT_set[[i]])
-  total_bases = sum(width(ENCODE_H3K27ac_peaks_in_CT_set[[i]]))
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = FALSE, by_rg = FALSE, format = "bam")
-  ATAC_in_captured_ENCODE_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ATAC_in_captured_ENCODE_inPeakData = rbind(ATAC_in_captured_ENCODE_inPeakData, data.frame(Sample = sampleList_all[i], ATAC_reads_in_captured_peaks = ATAC_in_captured_ENCODE_inPeakN, Total_bases = total_bases))
-}
-
-ATAC_in_captured_ENCODE_inPeakData$measure_ATAC_in_captured_ENCODE = ATAC_in_captured_ENCODE_inPeakData$ATAC_reads_in_captured_peaks/49677798 * (10^9/ATAC_in_captured_ENCODE_inPeakData$Total_bases)
-ATAC_in_captured_ENCODE_inPeakData
-```
-
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-bamFile = "/rds/general/user/la420/home/CUTnTAG/ATACseq/nfcore/results/bwa/mergedLibrary/K562_ATACseq_R1.mLb.clN.sorted.bam"
-ATAC_in_missed_ENCODE_inPeakData = c()
-
-for(i in 1:length(sampleList_all)){
-  peakRes = data.frame(ENCODE_H3K27ac_peaks_not_in_CT_set[[i]])
-  total_bases = sum(width(ENCODE_H3K27ac_peaks_not_in_CT_set[[i]]))
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = FALSE, by_rg = FALSE, format = "bam")
-  ATAC_in_missed_ENCODE_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ATAC_in_missed_ENCODE_inPeakData = rbind(ATAC_in_missed_ENCODE_inPeakData, data.frame(Sample = sampleList_all[i], ATAC_reads_in_missed_peaks = ATAC_in_missed_ENCODE_inPeakN, Total_bases = total_bases))
-}
-
-ATAC_in_missed_ENCODE_inPeakData$measure_ATAC_in_missed_ENCODE = ATAC_in_missed_ENCODE_inPeakData$ATAC_reads_in_missed_peaks/49677798 * (10^9/ATAC_in_missed_ENCODE_inPeakData$Total_bases)
-ATAC_in_missed_ENCODE_inPeakData
-```
-
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=20, fig.height=10}
-ATAC_reads_in_ENCODE_summary = data.frame(Sample = labels_SEACR_MACS2, ATAC_in_captured_ENCODE = ATAC_in_captured_ENCODE_inPeakData$measure_ATAC_in_captured_ENCODE, ATAC_in_missed_ENCODE = ATAC_in_missed_ENCODE_inPeakData$measure_ATAC_in_missed_ENCODE)
-
-ATAC_reads_in_ENCODE_summary_melt = melt(ATAC_reads_in_ENCODE_summary, id.vars = "Sample")
-
-ATAC_reads_in_ENCODE_plot = ggplot(ATAC_reads_in_ENCODE_summary_melt, aes(Sample, value)) +
-  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
-  theme_bw() +
-  ylab("ATAC reads in ENCODE") +
-  xlab("") +
-  ggtitle("ATAC reads in ENCODE H3K27ac peaks captured vs missed by CUT&Tag") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 20)) +
-  theme(legend.title = element_text(size = 20)) +
-  theme(legend.position = "bottom") +
-  scale_fill_viridis(name = "", labels = c("Reads in captured ENCODE peaks", "Reads in missed ENCODE peaks"), discrete = TRUE, begin = 0.5, end = 0.1, option = "viridis") +
-  theme(plot.margin = unit(c(1,1,1,4), "cm"))
-
-ATAC_reads_in_ENCODE_plot
-```
-
-
-
-# Fraction of reads in ATAC-seq peaks
-
-ATAC-seq libraries: ENCLB918NXF, ENCLB758GEG from https://www.encodeproject.org/experiments/ENCSR483RKN/
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakdir = "/rds/general/user/la420/home/CUTnTAG/ATACseq/nfcore/results/bwa/mergedReplicate/macs/narrowPeak"
-ATAC_path = file.path(peakdir, "K562_ATACseq.mRp.clN_peaks.narrowPeak")
-ATAC = ChIPseeker::readPeakFile(ATAC_path, as = "GRanges") %>% BRGenomics::tidyChromosomes(keep.X = TRUE, keep.Y = TRUE)
-```
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-overlaps_ATAC_ENCODE = GenomicRanges::countOverlaps(query = ATAC, subject = ENCODE_H3K27ac)
-overlaps_ENCODE_ATAC = GenomicRanges::countOverlaps(query = ENCODE_H3K27ac, subject = ATAC)
-
-length(overlaps_ATAC_ENCODE[overlaps_ATAC_ENCODE != 0])
-length(overlaps_ENCODE_ATAC[overlaps_ENCODE_ATAC != 0])
-length(ATAC)
-length(ENCODE_H3K27ac)
-```
-
-
-## C&T fragments in ENCODE H3K27ac peaks 
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-
-Total_ENCODE_inPeakData = c()
-peakRes = data.frame(ENCODE_H3K27ac)
-
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  Total_ENCODE_inPeakN = counts(fragment_counts)[,1] %>% sum
-  Total_ENCODE_inPeakData = rbind(Total_ENCODE_inPeakData, data.frame(Sample = sample, Total_ENCODE_inPeakN = Total_ENCODE_inPeakN))
-}
-
-Total_ENCODE_inPeakData
-```
-
-
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-fragList = c(92677, 289554, 837321, 464403, 1233018, 57782, 621112, 903945, 1261292, 26084, 19531, 18670)
-Total_ENCODE_inPeakData = data.frame(Sample = sampleList, Total_ENCODE_inPeakN = fragList)
-Total_ENCODE_inPeakData
-```
-
-
-## C&T fragments in ATAC peaks 
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-
-Total_ATAC_inPeakData = c()
-peakRes = data.frame(ATAC)
-
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  Total_ATAC_inPeakN = counts(fragment_counts)[,1] %>% sum
-  Total_ATAC_inPeakData = rbind(Total_ATAC_inPeakData, data.frame(Sample = sample, Total_ATAC_inPeakN = Total_ATAC_inPeakN))
-}
-
-Total_ATAC_inPeakData
-```
-
-
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-fragList = c(103946, 307188, 775818, 565985, 1217839, 329814, 610972, 882427, 1042923, 187761, 187620, 245822)
-Total_ATAC_inPeakData = data.frame(Sample = sampleList, Total_ATAC_inPeakN = fragList)
-Total_ATAC_inPeakData
-```
-
-
-## C&T fragments in ATAC-only peaks 
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-ATAC_not_ENCODE = IRanges::subsetByOverlaps(ATAC, ENCODE_H3K27ac, invert = TRUE)
-```
-
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-
-ATAC_inPeakData = c()
-peakRes = data.frame(ATAC_not_ENCODE)
-
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ATAC_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ATAC_inPeakData = rbind(ATAC_inPeakData, data.frame(Sample = sample, ATAC_inPeakN = ATAC_inPeakN))
-}
-
-ATAC_inPeakData
-```
-
-
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-fragList = c(23571, 64723, 144648, 207072, 241776, 262292, 108408, 149475, 197936, 166999, 171693, 231225)
-ATAC_inPeakData = data.frame(Sample = sampleList, ATAC_inPeakN = fragList)
-ATAC_inPeakData
-```
-
-
-## C&T fragments in ENCODE-only peaks
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-ENCODE_not_ATAC = IRanges::subsetByOverlaps(ENCODE_H3K27ac, ATAC, invert = TRUE)
-```
-
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-
-ENCODE_inPeakData = c()
-peakRes = data.frame(ENCODE_not_ATAC)
-
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ENCODE_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_inPeakData = rbind(ENCODE_inPeakData, data.frame(Sample = sample, ENCODE_inPeakN = ENCODE_inPeakN))
-}
-
-ENCODE_inPeakData
-```
-
-
-```{r eval=TRUE, echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
-fragList = c(8648, 27793, 95491, 62110, 131720, 5577, 66661, 93191, 182102, 5152, 4102, 4566)
-ENCODE_inPeakData = data.frame(Sample = sampleList, ENCODE_inPeakN = fragList)
-ENCODE_inPeakData
-```
-
-
-## C&T fragments in ENCODE/ATAC overlapping peaks
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-ENCODE_and_ATAC = IRanges::subsetByOverlaps(ENCODE_H3K27ac, ATAC)
-```
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-
-ENCODE_and_ATAC_inPeakData = c()
-peakRes = data.frame(ENCODE_and_ATAC)
-
-for(sample in sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/bam/", sample, "_bowtie2_rmDup.mapped.bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = TRUE, by_rg = FALSE, format = "bam")
-  ENCODE_and_ATAC_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_and_ATAC_inPeakData = rbind(ENCODE_and_ATAC_inPeakData, data.frame(Sample = sample, ENCODE_and_ATAC_inPeakN = ENCODE_and_ATAC_inPeakN))
-}
-
-ENCODE_and_ATAC_inPeakData
-```
-
-
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-fragList = c(84029, 261815, 741830, 402293, 1101298, 52205, 554451, 810754, 1079190, 20932, 20932, 14104)
-ENCODE_and_ATAC_inPeakData = data.frame(Sample = sampleList, ENCODE_and_ATAC_inPeakN = fragList)
-ENCODE_and_ATAC_inPeakData
-```
-
-
-## ENCODE fragments in ATAC-only peaks
-
-```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-datadir = "/rds/general/user/la420/home/CUTnTAG/antibodies"
-ENCODE_sampleList = c("H3K27ac_ENCFF384ZZM", "H3K27me3_ENCFF676ORH")
-
-peakRes = data.frame(ATAC)
-
-ENCODE_ATAC_inPeakData = c()
-for(sample in ENCODE_sampleList){
-  peak.gr = GenomicRanges::GRanges(seqnames = peakRes$seqnames, IRanges(start = peakRes$start, end = peakRes$end), strand = "*")
-  bamFile = paste0(datadir, "/correlation/ENCODE_peak_files/bam/", sample, ".bam")
-  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = FALSE, by_rg = FALSE, format = "bam")
-  ENCODE_ATAC_inPeakN = counts(fragment_counts)[,1] %>% sum
-  ENCODE_ATAC_inPeakData = rbind(ENCODE_ATAC_inPeakData, data.frame(Sample = sample, ENCODE_ATAC_inPeakN = ENCODE_ATAC_inPeakN))
-}
-
-ENCODE_total_frags = c(9770603, 12064137)
-ENCODE_ATAC_inPeakData$UniqueFragNum = ENCODE_total_frags
-ENCODE_ATAC_inPeakData$Percentage = ENCODE_ATAC_inPeakData$ENCODE_ATAC_inPeakN / ENCODE_ATAC_inPeakData$UniqueFragNum * 100
-
-ENCODE_ATAC_inPeakData
-```
-
-
-```{r, echo=FALSE, eval=TRUE, fig.height=5, fig.width=6, message=FALSE, warning=FALSE}
-ENCODE_sampleList = c("H3K27ac_ENCFF384ZZM", "H3K27me3_ENCFF676ORH")
-ENCODE_in_ATAC = c(271145, 400642)
-ENCODE_total_frags = c(9770603, 12064137)
-
-ENCODE_ATAC_inPeakData = data.frame(Sample = ENCODE_sampleList, UniqueFragNum = ENCODE_total_frags, ATAC_inPeakN = ENCODE_in_ATAC)
-ENCODE_ATAC_inPeakData$Percentage = ENCODE_ATAC_inPeakData$ATAC_inPeakN / ENCODE_ATAC_inPeakData$UniqueFragNum * 100
-
-ENCODE_ATAC_inPeakData
-```
-
-
-## Summary
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
-peakData = dupResult %>% left_join(Total_ENCODE_inPeakData, by = "Sample") %>% left_join(ENCODE_inPeakData, by = "Sample") %>% left_join(Total_ATAC_inPeakData, by = "Sample") %>% left_join(ATAC_inPeakData, by = "Sample")  %>% left_join(ENCODE_and_ATAC_inPeakData, by = "Sample")
-
-peakData$Percentage_ATAC = peakData$Total_ATAC_inPeakN / peakData$UniqueFragNum * 100
-peakData$Percentage_ENCODE = peakData$Total_ENCODE_inPeakN / peakData$UniqueFragNum * 100
-peakData$Percentage_ATAC_only = peakData$ATAC_inPeakN / peakData$UniqueFragNum * 100
-peakData$Percentage_ENCODE_only = peakData$ENCODE_inPeakN / peakData$UniqueFragNum * 100
-peakData$Percentage_ATAC_ENCODE = peakData$ENCODE_and_ATAC_inPeakN / peakData$UniqueFragNum * 100
-
-peakData = peakData %>% dplyr::select(Sample, UniqueFragNum, Total_ENCODE_inPeakN, ENCODE_inPeakN, Total_ATAC_inPeakN, ATAC_inPeakN, Percentage_ENCODE, Percentage_ENCODE_only, Percentage_ATAC, Percentage_ATAC_only, Percentage_ATAC_ENCODE)
-
-colnames(peakData) = c("Sample", "Unique Fragments", "Fragments in ENCODE H3K27ac peaks", "Fragments in ENCODE H3K27ac peaks (exc ATAC)", "Fragments in ATAC peaks", "Fragments in ATAC peaks (exc ENCODE)", "% of fragments in ENCODE H3K27ac (total)", "% of fragments in ENCODE H3K27ac (exc. ATAC)", "% of fragments in ATAC (total)", "% of fragments in ATAC (exc. ENCODE)", "% of fragments in ENCODE / ATAC overlapping regions")
-peakData
-```
-
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=20, fig.height=8}
-ATAC_peakData = peakData[c("Sample", "% of fragments in ENCODE H3K27ac (total)", "% of fragments in ATAC (total)", "% of fragments in ENCODE / ATAC overlapping regions", "% of fragments in ENCODE H3K27ac (exc. ATAC)", "% of fragments in ATAC (exc. ENCODE)")]
-
-ATAC_peakData_melt = melt(ATAC_peakData, id.vars = c("Sample"))
-
-ENCODE_ATAC_plot = ggplot(ATAC_peakData_melt, aes(Sample, value)) +
-  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity") +  
-  scale_fill_viridis(discrete = TRUE, begin = 0.1, end = 0.85, option = "magma", alpha = 0.8, labels = function(x) str_wrap(x, width = 30)) +
-  ylim(0, 40) +
-  theme_bw() +
-  ylab("% of fragments in peaks") +
-  xlab("Sample") +
-  scale_x_discrete(labels = labels_list) +
-  ggtitle("Fragments in ENCODE H3K27ac ChIP-seq and ATAC-seq peaks") +
-  ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 25)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_blank()) +
-  theme(legend.position = "bottom")
-
-
-sampleList = c("ActiveMotif", "Diagenode_100x", "Diagenode_50x", "Abcam-ab177178", "Abcam-ab4729", "scCT_H3K27me3", "H3K27me3", "H3K27ac_SRR8383507", "H3K27ac_SRR8383508", "H3K27ac_SRR8581604_CnR", "H3K27me3_SRR11074238", "H3K27me3_SRR11074239", "H3K27me3_SRR9073702_CnR")
-
-ENCODE_ATAC_plot
-```
-
-
-## ENCODE peaks in / not in ATAC
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
-encode_peaks_in_atac = IRanges::subsetByOverlaps(ENCODE_H3K27ac, ATAC)
-encode_peaks_in_atac = encode_peaks_in_atac %>% as.data.frame()
-qval_in_atac = encode_peaks_in_atac$V9
-
-encode_peaks_not_in_atac = IRanges::subsetByOverlaps(ENCODE_H3K27ac, ATAC, invert = TRUE)
-encode_peaks_not_in_atac = encode_peaks_not_in_atac %>% as.data.frame()
-qval_not_in_atac = encode_peaks_not_in_atac$V9
-
-qval_in_atac %>% summary()
-qval_not_in_atac %>% summary()
-
-boxplot(qval_in_atac, qval_not_in_atac, outline = FALSE, names = c("ENCODE peaks in ATAC", "ENCODE peaks not in ATAC"), ylab = "log(q value)")
-```
-
-
-# SEACR vs MACS2 peaks
+### SEACR vs MACS2 peaks
 
 ```{r}
+# use original peaks (unfiltered)
+SEACR_peakList = peakList_unfilt[seq(1, length(peakList), by = 2)]
+MACS2_peakList = peakList_unfilt[seq(2, length(peakList), by = 2)]
+```
+
+
+```{r, warning=FALSE}
 SEACR_only_peaks = list()
 MACS2_only_peaks = list()
 
-for(i in 1:length(SEACR_peaks_ac)){
-  SEACR_only_peaks[[i]] = IRanges::subsetByOverlaps(SEACR_peaks_ac[[i]], MACS2_peaks_ac[[i]], invert = TRUE)
-  MACS2_only_peaks[[i]] = IRanges::subsetByOverlaps(MACS2_peaks_ac[[i]], SEACR_peaks_ac[[i]], invert = TRUE)
+for(i in 1:length(SEACR_peakList)){
+  SEACR_only_peaks[[i]] = IRanges::subsetByOverlaps(SEACR_peakList[[i]], MACS2_peakList[[i]], invert = TRUE)
+  MACS2_only_peaks[[i]] = IRanges::subsetByOverlaps(MACS2_peakList[[i]], SEACR_peakList[[i]], invert = TRUE)
 }
 
-SEACR_only_peaks = setNames(SEACR_only_peaks, names(SEACR_peaks_ac))
-MACS2_only_peaks = setNames(MACS2_only_peaks, names(MACS2_peaks_ac))
+names(SEACR_only_peaks) = sampleList
+names(MACS2_only_peaks) = sampleList
 ```
 
 
@@ -2062,7 +1187,7 @@ for(i in 1:length(SEACR_only_peaks)){
   MACS2_only_peaks_total[i] = length(MACS2_only_peaks[[i]])
 }
 
-caller_specific_peaks = data.frame(Sample = names(SEACR_peaks_ac), SEACR_only_peaks_in_ENCODE = SEACR_only_peaks_in_ENCODE, SEACR_only_peaks_total = SEACR_only_peaks_total, MACS2_only_peaks_in_ENCODE = MACS2_only_peaks_in_ENCODE, MACS2_only_peaks_total = MACS2_only_peaks_total)
+caller_specific_peaks = data.frame(Sample = names(SEACR_peakList), SEACR_only_peaks_in_ENCODE = SEACR_only_peaks_in_ENCODE, SEACR_only_peaks_total = SEACR_only_peaks_total, MACS2_only_peaks_in_ENCODE = MACS2_only_peaks_in_ENCODE, MACS2_only_peaks_total = MACS2_only_peaks_total)
 
 caller_specific_peaks$SEACR_only_peaks_in_ENCODE_percentage = caller_specific_peaks$SEACR_only_peaks_in_ENCODE / caller_specific_peaks$SEACR_only_peaks_total * 100
 
@@ -2072,7 +1197,9 @@ caller_specific_peaks
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=14, fig.height=7}
+##### SEACR
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
 annotation = genomation::annotateWithFeatures(GenomicRanges::GRangesList(SEACR_only_peaks), chrHMM_list)
 matrix = genomation::heatTargetAnnotation(annotation, plot = FALSE)
 
@@ -2082,20 +1209,19 @@ matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=14, fig.height=7}
+##### MACS2
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=5}
 annotation = genomation::annotateWithFeatures(GenomicRanges::GRangesList(MACS2_only_peaks), chrHMM_list)
 matrix = genomation::heatTargetAnnotation(annotation, plot = FALSE)
 
@@ -2105,30 +1231,277 @@ matrix_melt = melt(matrix)
 colnames(matrix_melt) = c("Sample", "State", "% of peaks")
 
 ggplot(matrix_melt) +
+  theme_minimal() +
   geom_tile(aes(x = State, y = Sample, fill = `% of peaks`)) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
-  theme_minimal() +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title.x = element_text(size = 15)) +
-  theme(legend.key.size = unit(1, "cm")) +
-  theme(legend.text = element_text(size = 12)) +
-  theme(legend.title = element_text(size = 14))
+  theme(text = element_text(size = 25)) +
+  theme(legend.key.size = unit(1, "cm")) 
 ```
 
+
+## ChIPseeker    {.tabset}
+
+### annoBar
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=5, fig.height=3}
+peakAnnoList = lapply(peakList_with_ENCODE, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
+
+annobar = ChIPseeker::plotAnnoBar(peakAnnoList)
+annobar
+```
+
+
+# Enrichment analysis
+
+## clusterProfiler
+
+### KEGG
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=7, fig.height=10}
+peakAnnoList = lapply(peakList_with_ENCODE, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
+
+genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
+names(genes) = sub("_", "\n", names(genes))
+compKEGG = clusterProfiler::compareCluster(geneCluster = genes,
+                                           fun = "enrichKEGG",
+                                           pvalueCutoff = 0.05,
+                                           pAdjustMethod = "BH")
+
+KEGG_plot = clusterProfiler::dotplot(compKEGG, showCategory = 10, title = "KEGG Pathway Enrichment Analysis") +
+  theme_bw(base_size = 20) +
+  ggpubr::rotate_x_text(angle = 45) +
+  theme(legend.key.size = unit(1.5, "cm")) +
+  scale_size_area(max_size = 15)
+
+KEGG_plot
+```
+
+
+### GO
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=7, fig.height=10}
+peakAnnoList = lapply(peakList_with_ENCODE, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
+
+genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
+names(genes) = sub("_", "\n", names(genes))
+compGO = clusterProfiler::compareCluster(geneCluster = genes,
+                                           OrgDb = "org.Hs.eg.db", 
+                                           fun = "enrichGO",
+                                           pvalueCutoff = 0.05,
+                                           pAdjustMethod = "BH")
+
+GO_plot = clusterProfiler::dotplot(compGO, showCategory = 10, title = "GO Enrichment Analysis") +
+  theme_bw(base_size = 20) +
+  ggpubr::rotate_x_text(angle = 45) +
+  theme(legend.key.size = unit(1.5, "cm")) +
+  scale_size_area(max_size = 15)
+
+GO_plot
+```
+
+
+## ReactomePA
+
+```{r}
+pathways = list()
+
+for(peak in peakList_with_ENCODE){
+  gene = ChIPseeker::seq2gene(peak, tssRegion = c(-3000, 3000), flankDistance = 3000, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene)
+  pathway = ReactomePA::enrichPathway(gene)
+  pathways = c(pathways, pathway)
+}
+
+names(pathways) = names(peakList_with_ENCODE)
+```
+
+
+```{r}
+pathways = list()
+geneList = list()
+
+for(i in 1:length(peakList_with_ENCODE)){
+  gene = ChIPseeker::seq2gene(peakList_with_ENCODE[[i]], tssRegion = c(-3000, 3000), flankDistance = 3000, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene)
+  geneList[[i]] = gene
+  pathway = ReactomePA::enrichPathway(gene)
+  pathways[[i]] = pathway
+}
+
+names(pathways) = names(peakList_with_ENCODE)
+names(geneList) = names(peakList_with_ENCODE)
+```
+
+
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=7, fig.height=10}
+ReactomePA_comp = clusterProfiler::compareCluster(geneList, fun = "enrichPathway")
+
+clusterProfiler::dotplot(ReactomePA_comp, showCategory = 10) +
+  theme_bw(base_size = 20) +
+  ggtitle("Reactome Pathway Analysis") +
+  ggpubr::rotate_x_text(angle = 45) +
+  theme(legend.key.size = unit(1.5, "cm")) +
+  scale_size_area(max_size = 15)
+```
+
+
+# Motifs
+
+```{r}
+motifs = list()
+
+for(i in 1:length(sampleList_all_with_ENCODE)){
+  motif = marge::read_known_results(path = paste0("/Volumes/test_data/motifs/", sampleList_all_with_ENCODE[i]), homer_dir = TRUE)
+  motifs[[i]] = motif[order(-motif$log_p_value), ]
+}
+
+motifs = setNames(motifs, sampleList_all_with_ENCODE)
+
+#in some cases top -log(p) values are infinite (especially for ENCODE H3K27ac), so will set them to the maximum -log(p-value) attained by other samples
+for(i in 1:length(sampleList_all_with_ENCODE)){
+  motifs[[i]]$log_p_value[(motifs[[i]]$log_p_value == "Inf")] = 300
+}
+```
+
+
+## By motif family
+
+```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=4, fig.height=12}
+tbl_summaries = list()
+for(i in 1:length(sampleList_all_with_ENCODE)){
+  motifs[[i]]$Sample = sampleList_all_with_ENCODE[i]
+  tbl_summary = motifs[[i]] %>% group_by(Sample, motif_family) %>% summarise(top_log_p_value = max(log_p_value)) %>% ungroup()
+  tbl_summaries[[i]] = tbl_summary
+}
+
+tbl_results = data.table::rbindlist(tbl_summaries)
+
+
+tbl_results$Sample = factor(tbl_results$Sample, levels = unique(tbl_results$Sample))
+
+tbl_results %>% ggplot(aes(x = Sample, y = motif_family, fill = top_log_p_value)) +
+  theme_minimal(base_size = 15) +
+  geom_tile() +
+  ylab("Motif family") +
+  scale_fill_viridis() +
+  ggpubr::rotate_x_text(angle = 45)
+```
+
+
+## All motifs
+
+```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=4, fig.height=12}
+motif_summary = c()
+
+# collect top 15 motifs
+for(i in 1:length(motifs)){
+  table = motifs[[i]]
+  top_motifs = table[1:15,1] %>% as.vector() %>% unname() %>% unlist()
+  p_vals = table[1:15,7] %>% as.vector() %>% unname() %>% unlist()
+  motif_summary = data.frame(Sample = sampleList_all_with_ENCODE[i], Top_motifs = top_motifs, log_p_value = p_vals) %>% rbind(motif_summary, .)
+}
+
+motif_summary$Sample = factor(motif_summary$Sample, levels = unique(motif_summary$Sample))
+
+ggplot(motif_summary) +
+  geom_point(aes(x = Sample, y = Top_motifs, size = log_p_value, color = log_p_value)) +
+  theme_bw(base_size = 18) +
+  xlab("") +
+  ylab("") +
+  ggpubr::rotate_x_text(angle = 45) +
+  theme(plot.margin = unit(c(0.5,0,0,2), "cm")) 
+```
+
+
+# ATAC-seq reads in captured vs missed ENCODE peaks
+
+ATAC-seq libraries: ENCLB918NXF, ENCLB758GEG from https://www.encodeproject.org/experiments/ENCSR483RKN/
+
+```{r, echo=TRUE, eval=FALSE}
+# did not evaluate
+bamFile = "/Volumes/test_data/resources/ATAC/bam/K562_ATACseq_R1.mLb.clN.sorted.bam"
+
+total_ATAC_reads = 49677798
+
+ATAC_in_captured_ENCODE_inPeakData = c()
+for(i in 1:length(sampleList_all)){
+  total_bases = sum(width(ENCODE_H3K27ac_peaks_in_CT_set[[i]]))
+  peak = data.frame(ENCODE_H3K27ac_peaks_in_CT_set[[i]])
+  peak.gr = GenomicRanges::GRanges(seqnames = peak$seqnames, IRanges(start = peak$start, end = peak$end), strand = "*")
+  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = FALSE, by_rg = FALSE, format = "bam")
+  ATAC_in_captured_ENCODE_inPeakN = counts(fragment_counts)[,1] %>% sum
+  ATAC_in_captured_ENCODE_inPeakData = rbind(ATAC_in_captured_ENCODE_inPeakData, data.frame(Sample = sampleList_all[i], ATAC_reads_in_captured_peaks = ATAC_in_captured_ENCODE_inPeakN, Total_bases = total_bases))
+}
+
+# adjust FRiPs for total coverage of ENCODE peak set and multiplied by constant 
+ATAC_in_captured_ENCODE_inPeakData$measure_ATAC_in_captured_ENCODE = ATAC_in_captured_ENCODE_inPeakData$ATAC_reads_in_captured_peaks/total_ATAC_reads * (10^9/ATAC_in_captured_ENCODE_inPeakData$Total_bases)
+ATAC_in_captured_ENCODE_inPeakData
+```
+
+
+```{r, echo=TRUE, eval=FALSE}
+# did not evaluate
+ATAC_in_missed_ENCODE_inPeakData = c()
+for(i in 1:length(sampleList_all)){
+  total_bases = sum(width(ENCODE_H3K27ac_peaks_not_in_CT_set[[i]]))
+  peak = data.frame(ENCODE_H3K27ac_peaks_not_in_CT_set[[i]])
+  peak.gr = GenomicRanges::GRanges(seqnames = peak$seqnames, IRanges(start = peak$start, end = peak$end), strand = "*")
+  fragment_counts = chromVAR::getCounts(bamFile, peak.gr, paired = FALSE, by_rg = FALSE, format = "bam")
+  ATAC_in_missed_ENCODE_inPeakN = counts(fragment_counts)[,1] %>% sum
+  ATAC_in_missed_ENCODE_inPeakData = rbind(ATAC_in_missed_ENCODE_inPeakData, data.frame(Sample = sampleList_all[i], ATAC_reads_in_missed_peaks = ATAC_in_missed_ENCODE_inPeakN, Total_bases = total_bases))
+}
+
+# adjusted FRiPs for total coverage of ENCODE peak set and multiplied by constant 
+ATAC_in_missed_ENCODE_inPeakData$measure_ATAC_in_missed_ENCODE = ATAC_in_missed_ENCODE_inPeakData$ATAC_reads_in_missed_peaks/total_ATAC_reads * (10^9/ATAC_in_missed_ENCODE_inPeakData$Total_bases)
+ATAC_in_missed_ENCODE_inPeakData
+```
+
+
+```{r, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+# did not evaluate
+ATAC_reads_in_ENCODE_summary = data.frame(Sample = labels_SEACR_MACS2, ATAC_in_captured_ENCODE = ATAC_in_captured_ENCODE_inPeakData$measure_ATAC_in_captured_ENCODE, ATAC_in_missed_ENCODE = ATAC_in_missed_ENCODE_inPeakData$measure_ATAC_in_missed_ENCODE)
+
+ATAC_reads_in_ENCODE_summary_melt = melt(ATAC_reads_in_ENCODE_summary, id.vars = "Sample")
+
+ATAC_reads_in_ENCODE_plot = ggplot(ATAC_reads_in_ENCODE_summary_melt, aes(Sample, value)) +
+  geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
+  theme_bw() +
+  ylab("ATAC reads in ENCODE (adj %)") +
+  xlab("") +
+  ggtitle("ATAC reads in ENCODE H3K27ac peaks captured vs missed by CUT&Tag") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(legend.position = "bottom") +
+  scale_fill_discrete(name = "", labels = c("Reads in captured ENCODE peaks", "Reads in missed ENCODE peaks"))
+
+ATAC_reads_in_ENCODE_plot
+```
 
 
 # STARR-seq 
 
 ```{r}
-STARRseq_rep1 = ChIPseeker::readPeakFile(paste0(dir, "/STARRseq_peaks_hg38_ENCFF717VJK.bed"), as = "GRanges") 
-STARRseq_rep2 = ChIPseeker::readPeakFile(paste0(dir, "/STARRseq_peaks_hg38_ENCFF394DBM.bed"), as = "GRanges") 
-STARRseq_hg38 = IRanges::subsetByOverlaps(STARRseq_rep1, STARRseq_rep2)
+#STARRseq_rep1 = ChIPseeker::readPeakFile(paste0(dir, "/STARRseq_peaks_hg38_ENCFF717VJK.bed"), as = "GRanges") 
+#STARRseq_rep2 = ChIPseeker::readPeakFile(paste0(dir, "/STARRseq_peaks_hg38_ENCFF394DBM.bed"), as = "GRanges") 
+#STARRseq_hg38 = IRanges::subsetByOverlaps(STARRseq_rep1, STARRseq_rep2)
 
 chainfile = rtracklayer::import.chain(system.file(package = "liftOver", "extdata", "hg38ToHg19.over.chain"))
-seqlevelsStyle(STARRseq_hg38) = "UCSC" 
-STARRseq = rtracklayer::liftOver(STARRseq_hg38, chainfile) %>% unlist() 
+#seqlevelsStyle(STARRseq_hg38) = "UCSC" 
+#STARRseq = rtracklayer::liftOver(STARRseq_hg38, chainfile) %>% unlist() 
+#write.table(data.frame(STARRseq), file = paste0(datadir, "/resources/STARRseq/STARRseq_hg19_replicated_peaks_ENCSR858MPS.bed"), sep = "\t", col.names = FALSE, row.names = FALSE)
+STARRseq = ChIPseeker::readPeakFile(paste0(datadir, "/resources/STARRseq/STARRseq_hg19_replicated_peaks_ENCSR858MPS.bed"), as = "GRanges")
+
+
+dir = "/Users/leylaabbasova/Documents/CUTnTag/analysis/STARRseq"
+ENCODE_DNase = ChIPseeker::readPeakFile(paste0(dir, "/DNase_seq_hg38_ENCFF722NSO.bed"), as = "GRanges")
+seqlevelsStyle(ENCODE_DNase) = "UCSC" 
+ENCODE_DNase = rtracklayer::liftOver(ENCODE_DNase, chainfile) %>% unlist()
+```
+
+
+## Filter peaks
+
+```{r}
+STARRseq_filt = IRanges::subsetByOverlaps(STARRseq, ENCODE_DNase)
 ```
 
 
@@ -2142,29 +1515,29 @@ STARRseq_filt_overlapping_peaks = c()
 STARRseq_filt_overlap_prop = c()
 STARRseq_filt_missed_peaks = c()
 
-for(i in 1:length(peakList)){
-  STARRseq_overlapping_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq, peakList[[i]])
-  STARRseq_missed_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq, peakList[[i]], invert = TRUE)
+for(i in 1:length(peakList_with_ENCODE)){
+  STARRseq_overlapping_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq, peakList_with_ENCODE[[i]])
+  STARRseq_missed_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq, peakList_with_ENCODE[[i]], invert = TRUE)
   STARRseq_overlap_prop = c(STARRseq_overlap_prop, length(STARRseq_overlapping_peaks[[i]])/length(STARRseq))
   
-  STARRseq_filt_overlapping_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq_filt, peakList[[i]])
-  STARRseq_filt_missed_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq_filt, peakList[[i]], invert = TRUE)
+  STARRseq_filt_overlapping_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq_filt, peakList_with_ENCODE[[i]])
+  STARRseq_filt_missed_peaks[[i]] = IRanges::subsetByOverlaps(STARRseq_filt, peakList_with_ENCODE[[i]], invert = TRUE)
   STARRseq_filt_overlap_prop = c(STARRseq_filt_overlap_prop, length(STARRseq_filt_overlapping_peaks[[i]])/length(STARRseq_filt))
 }
 
 
-names(STARRseq_overlapping_peaks) = sampleNames
-names(STARRseq_overlap_prop) = sampleNames
-names(STARRseq_missed_peaks) = sampleNames
+names(STARRseq_overlapping_peaks) = sampleList_all_with_ENCODE
+names(STARRseq_overlap_prop) = sampleList_all_with_ENCODE
+names(STARRseq_missed_peaks) = sampleList_all_with_ENCODE
 
-names(STARRseq_filt_overlapping_peaks) = sampleNames
-names(STARRseq_filt_overlap_prop) = sampleNames
-names(STARRseq_filt_missed_peaks) = sampleNames
+names(STARRseq_filt_overlapping_peaks) = sampleList_all_with_ENCODE
+names(STARRseq_filt_overlap_prop) = sampleList_all_with_ENCODE
+names(STARRseq_filt_missed_peaks) = sampleList_all_with_ENCODE
 
-STARRseq_peak_overlaps_df = data.frame("Sample" = sampleNames,
+STARRseq_peak_overlaps_df = data.frame("Sample" = sampleList_all_with_ENCODE,
                                        "% captured STARR-seq peaks (all)" = (STARRseq_overlap_prop * 100),
                                        "% captured STARR-seq peaks (filt)" = (STARRseq_filt_overlap_prop * 100),
-                                       "Total sample peaks" = lapply(peakList, length) %>% unlist %>% unname,
+                                       "Total sample peaks" = lapply(peakList_with_ENCODE, length) %>% unlist %>% unname,
                                        check.names = FALSE, row.names = NULL)
 STARRseq_peak_overlaps_df
 ```
@@ -2179,25 +1552,24 @@ Check -log10(qval) values of captured and missed STARR-seq peaks:
 ```{r}
 STARRseq_qvals_df = c()
 
-for(i in 1:length(peakList)){
-  df_captured = data.frame("Sample" = sampleNames[i], "-log10(qval)" = STARRseq_overlapping_peaks[[i]]$V12, "Captured" = "Captured", check.names = FALSE)
-  df_missed = data.frame("Sample" = sampleNames[i], "-log10(qval)" = STARRseq_missed_peaks[[i]]$V12, "Captured" = "Missed", check.names = FALSE)
+for(i in 1:length(peakList_with_ENCODE)){
+  df_captured = data.frame("Sample" = sampleList_all_with_ENCODE[i], "-log10(qval)" = STARRseq_overlapping_peaks[[i]]$V12, "Captured" = "Captured", check.names = FALSE)
+  df_missed = data.frame("Sample" = sampleList_all_with_ENCODE[i], "-log10(qval)" = STARRseq_missed_peaks[[i]]$V12, "Captured" = "Missed", check.names = FALSE)
   STARRseq_qvals_df = rbind(STARRseq_qvals_df, rbind(df_captured, df_missed))
 }
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=40, fig.height=20}
+```{r}
 STARRseq_qvals_df_melt = melt(STARRseq_qvals_df, id.vars = c("Sample", "Captured"))
 ```
 
 
-```{r, fig.height=4, fig.width=3.5}
+```{r, fig.height=3, fig.width=5}
 ggplot(STARRseq_qvals_df_melt, aes(x = value, y = Sample, fill = Captured)) + 
   theme_bw() +
-  stat_boxplot(geom = "errorbar") + 
+  stat_boxplot(geom = "errorbar", coef = 1.5) + 
   geom_boxplot(outlier.shape = NA) +
-  scale_fill_manual(values = alpha(paletteer_d("vapoRwave::vapoRwave")[c(1,8)], alpha = 0.8)) +
   coord_cartesian(xlim = c(1, 10)) +
   scale_x_continuous(breaks = seq(1, 10, by = 1)) +
   ylab("") +
@@ -2211,17 +1583,16 @@ ggplot(STARRseq_qvals_df_melt, aes(x = value, y = Sample, fill = Captured)) +
 ```{r}
 tests = c()
 
-for(i in 1:length(sampleNames)){
-  #var.test(STARRseq_in_ENCODE_H3K27ac$V12, STARRseq_not_in_ENCODE_H3K27ac$V12)
-  captured = STARRseq_qvals_df[(STARRseq_qvals_df$Sample == sampleNames[i] & STARRseq_qvals_df$Captured == "Captured"),]
-  missed = STARRseq_qvals_df[(STARRseq_qvals_df$Sample == sampleNames[i] & STARRseq_qvals_df$Captured == "Missed"),]
+for(i in 1:length(sampleList_all_with_ENCODE)){
+  captured = STARRseq_qvals_df[(STARRseq_qvals_df$Sample == sampleList_all_with_ENCODE[i] & STARRseq_qvals_df$Captured == "Captured"),]
+  missed = STARRseq_qvals_df[(STARRseq_qvals_df$Sample == sampleList_all_with_ENCODE[i] & STARRseq_qvals_df$Captured == "Missed"),]
   var_test = var.test(captured$`-log10(qval)`, missed$`-log10(qval)`)
   var = ifelse(var_test$p.value < 0.05, FALSE, TRUE)
-  test = t.test(captured$`-log10(qval)`, missed$`-log10(qval)`, var.equal = var)
-  tests[i] = ifelse(test$p.value < 0.05, "significant", "insignificant")
+  test = t.test(captured$`-log10(qval)`, missed$`-log10(qval)`, var.equal = var, paired = FALSE, alternative = c("two.sided"))
+  tests[[i]] = test
 }
 
-names(tests) = sampleNames
+names(tests) = sampleList_all_with_ENCODE
 tests
 ```
 
@@ -2243,18 +1614,15 @@ for(i in 1:length(STARRseq_filt_overlapping_peaks_cut)){
 
 
 ```{r}
-STARRseq_filt_qvals_df_ac = STARRseq_filt_qvals_df[STARRseq_filt_qvals_df$Sample %notin% c("H3K27me3 (Kaya-Okur)", "ENCODE H3K27me3", "H3K27me3"), ]
-STARRseq_filt_qvals_df_ac$Sample = factor(STARRseq_filt_qvals_df_ac$Sample, levels = unique(STARRseq_filt_qvals_df_ac$Sample))
-STARRseq_filt_qvals_df_melt = melt(STARRseq_filt_qvals_df_ac, id.vars = c("Sample", "Captured"))
+STARRseq_filt_qvals_df_melt = melt(STARRseq_filt_qvals_df, id.vars = c("Sample", "Captured"))
 ```
 
 
-```{r, fig.height=3, fig.width=4}
+```{r, fig.height=3, fig.width=5}
 ggplot(STARRseq_filt_qvals_df_melt, aes(x = value, y = Sample, fill = Captured)) + 
   theme_bw() +
-  stat_boxplot(geom = "errorbar") + 
+  stat_boxplot(geom = "errorbar", coef = 1.5) + 
   geom_boxplot(outlier.shape = NA) +
-  scale_fill_manual(values = alpha(paletteer_d("vapoRwave::vapoRwave")[c(1,8)], alpha = 0.8)) +
   coord_cartesian(xlim = c(1, 10)) +
   scale_x_continuous(breaks = seq(1, 10, by = 1)) +
   scale_y_discrete(limits = rev(levels(STARRseq_filt_qvals_df_melt$Sample))) +
@@ -2275,7 +1643,7 @@ for(i in 1:length(STARRseq_filt_overlapping_peaks_cut)){
   var_test = var.test(captured$`-log10(qval)`, missed$`-log10(qval)`)
   var = ifelse(var_test$p.value < 0.05, FALSE, TRUE)
   test = t.test(captured$`-log10(qval)`, missed$`-log10(qval)`, var.equal = var)
-  tests[i] = ifelse(test$p.value < 0.05, "significant", "insignificant")
+  tests[[i]] = test
 }
 
 names(tests) = names(STARRseq_filt_overlapping_peaks_cut)
@@ -2290,14 +1658,13 @@ tests
 Randomly sample 6000 peaks from each sample and compare overlaps:
 
 ```{r}
-peakList_cut = peakList[c("Diagenode (1:50)", "Abcam-ab4729", "H3K27ac (Kaya-Okur)", "ENCODE H3K27ac", "ENCODE DNase", "H3K27me3", "ENCODE H3K27me3")]
 peakList_sub = c()
 
-for(i in 1:length(peakList_cut)){
-  peakList_sub[[i]] = peakList_cut[[i]][sample(length(peakList_cut[[i]]), 6000), ]
+for(i in 1:length(peakList_with_ENCODE)){
+  peakList_sub[[i]] = peakList_with_ENCODE[[i]][sample(length(peakList_with_ENCODE[[i]]), 6000), ]
 }
 
-names(peakList_sub) = names(peakList_cut)
+names(peakList_sub) = names(peakList_with_ENCODE)
 sub_STARRseq_peak_overlaps_df = EpiCompare::overlap_percent(STARRseq, peakList_sub)
 sub_STARRseq_peak_overlaps_df["Percentage (filt)"] = (EpiCompare::overlap_percent(STARRseq_filt, peakList_sub))$Percentage %>% round(3)
 sub_STARRseq_peak_overlaps_df["Mb"] = lapply(peakList_sub, function(x){sum(GenomicRanges::width(x))/10^6}) %>% unlist() %>% round(2)
@@ -2313,23 +1680,23 @@ Keep genome coverage the same:
 test_coverage = function(peaks){sum(GenomicRanges::width(peaks)/10^6) %>% unlist() %>% round(0)}
 peakList_sub_cov = c()
 range_start = 500
-# min is 8Mb (ENCODE DNase)
-Mb = 8
+# minimum coverage is 8Mb if also using ENCODE DNase peaks in comparison, otherwise can set higher limit
+Mb = 15
 
 
-for(i in 1:length(peakList_cut)){
-  print(paste("Peak", i))
+for(i in 1:length(peakList_with_ENCODE)){
+  #print(paste("Peak", i))
   
-  # use all DNAse peaks
-  if(names(peakList_cut)[i] == "ENCODE DNase"){
-    range = length(peakList_cut$`ENCODE DNase`)
+  # if included, use all DNase peaks
+  if(names(peakList_with_ENCODE)[i] == "ENCODE DNase"){
+    range = length(peakList_with_ENCODE$`ENCODE DNase`)
   } else {
-    range_start = ((Mb - 2)/test_coverage(peakList_cut[[i]]) * length(peakList_cut[[i]])) %>% round(0)
-    range = range_start:length(peakList_cut[[i]])
+    range_start = ((Mb - 2)/test_coverage(peakList_with_ENCODE[[i]]) * length(peakList_with_ENCODE[[i]])) %>% round(0)
+    range = range_start:length(peakList_with_ENCODE[[i]])
   }
   
   # test lower bound of range
-  test_peaks = peakList_cut[[i]][sample(length(peakList_cut[[i]]), range[1]), ]
+  test_peaks = peakList_with_ENCODE[[i]][sample(length(peakList_with_ENCODE[[i]]), range[1]), ]
   test_cov = test_peaks %>% test_coverage()
 
   if(test_cov == Mb){
@@ -2338,7 +1705,7 @@ for(i in 1:length(peakList_cut)){
   
   if(test_cov < Mb){
     for(x in range){
-      sub_peaks = peakList_cut[[i]][sample(length(peakList_cut[[i]]), x), ]
+      sub_peaks = peakList_with_ENCODE[[i]][sample(length(peakList_with_ENCODE[[i]]), x), ]
       coverage = test_coverage(sub_peaks)
       if(coverage == Mb){
         peakList_sub_cov[[i]] = sub_peaks
@@ -2350,11 +1717,11 @@ for(i in 1:length(peakList_cut)){
   if(test_cov > Mb){ 
     print(paste("Adjusting range for peak", i))  
     range_start = range_start - 500
-    range = range_start:length(peakList_cut[[i]])
+    range = range_start:length(peakList_with_ENCODE[[i]])
     }
   }
 
-names(peakList_sub_cov) = names(peakList_cut)
+names(peakList_sub_cov) = names(peakList_with_ENCODE)
 sub_cov_STARRseq_peak_overlaps_df = EpiCompare::overlap_percent(STARRseq, peakList_sub_cov)
 sub_cov_STARRseq_peak_overlaps_df["Percentage (filt)"] = (EpiCompare::overlap_percent(STARRseq_filt, peakList_sub_cov))$Percentage %>% round(3)
 sub_cov_STARRseq_peak_overlaps_df["Mb"] = lapply(peakList_sub_cov, function(x){sum(GenomicRanges::width(reduce(x)))/10^6}) %>% unlist() %>% round(2)
@@ -2379,18 +1746,17 @@ sub_STARRseq_peak_overlaps_df = sub_STARRseq_peak_overlaps_df[match(STARRseq_pea
 sub_cov_STARRseq_peak_overlaps_df = sub_cov_STARRseq_peak_overlaps_df[match(STARRseq_peak_overlaps_df_cut$Sample, rownames(sub_cov_STARRseq_peak_overlaps_df)),]
 
 
-#STARRseq_capture_summary = data.frame("Sample" = STARRseq_peak_overlaps_df_cut$Sample, "Uncorrected" = STARRseq_peak_overlaps_df_cut$`% captured STARR-seq peaks (all)`, "Corrected for peak number" = sub_STARRseq_peak_overlaps_df$Percentage, "Corrected for genomic coverage" = sub_cov_STARRseq_peak_overlaps_df$Percentage, check.names = FALSE)
 STARRseq_capture_summary = data.frame("Sample" = STARRseq_peak_overlaps_df_cut$Sample, "Uncorrected" = STARRseq_peak_overlaps_df_cut$`% captured STARR-seq peaks (all)`, "Corrected for genomic coverage" = sub_cov_STARRseq_peak_overlaps_df$Percentage, check.names = FALSE)
 
-#STARRseq_capture_summary_filt = data.frame("Sample" = STARRseq_peak_overlaps_df_cut$Sample, "Uncorrected" = STARRseq_peak_overlaps_df_cut$`% captured STARR-seq peaks (filt)`, "Corrected for peak number" = sub_STARRseq_peak_overlaps_df$`Percentage (filt)`, "Corrected for genomic coverage" = sub_cov_STARRseq_peak_overlaps_df$`Percentage (filt)`, check.names = FALSE)
 STARRseq_capture_summary_filt = data.frame("Sample" = STARRseq_peak_overlaps_df_cut$Sample, "Uncorrected" = STARRseq_peak_overlaps_df_cut$`% captured STARR-seq peaks (filt)`, "Corrected for genomic coverage" = sub_cov_STARRseq_peak_overlaps_df$`Percentage (filt)`, check.names = FALSE)
+
 
 STARRseq_capture_summary
 STARRseq_capture_summary_filt
 ```
 
 
-```{r, fig.height=2.5, fig.width=3.2}
+```{r, fig.height=2.5, fig.width=3.5}
 STARRseq_capture_summary_melt = melt(STARRseq_capture_summary)
 STARRseq_capture_summary_melt$Sample = factor(STARRseq_capture_summary_melt$Sample, levels = unique(STARRseq_capture_summary_melt$Sample))
 
@@ -2398,32 +1764,29 @@ ggplot(STARRseq_capture_summary_melt, aes(y = Sample, x = value, fill = variable
   theme_bw() +
   geom_bar(stat = "identity", width = 0.75, position = position_dodge(width = 0.75), color = "black", size = 0.2) +
   scale_y_discrete(limits = rev(levels(STARRseq_capture_summary_melt$Sample))) +
-  scale_fill_manual(values = alpha(paletteer_d("vapoRwave::vapoRwave")[c(11,9,2)], alpha = 0.7)) +
   ylab("") +
   #xlim(0,40) +
   xlab("% of STARR-seq peaks captured") +
   theme(legend.position = "bottom", legend.title = element_blank()) +
   guides(fill = guide_legend(ncol = 2, reverse = FALSE)) +
-  theme(text = element_text(size = 15))  
+  theme(text = element_text(size = 12))  
 ```
 
 
-```{r, fig.height=2.5, fig.width=3.2}
+```{r, fig.height=2.5, fig.width=3.5}
 STARRseq_capture_summary_filt_melt = melt(STARRseq_capture_summary_filt)
-STARRseq_capture_summary_filt_melt = STARRseq_capture_summary_filt_melt[STARRseq_capture_summary_filt_melt$Sample != "ENCODE DNase", ]
 STARRseq_capture_summary_filt_melt$Sample = factor(STARRseq_capture_summary_filt_melt$Sample, levels = unique(STARRseq_capture_summary_filt_melt$Sample))
 
 ggplot(STARRseq_capture_summary_filt_melt, aes(y = Sample, x = value, fill = variable)) +
   theme_bw() +
   geom_bar(stat = "identity", width = 0.75, position = position_dodge(width = 0.75), color = "black", size = 0.2) +
   scale_y_discrete(limits = rev(levels(STARRseq_capture_summary_filt_melt$Sample))) +
-  scale_fill_manual(values = alpha(paletteer_d("vapoRwave::vapoRwave")[c(11,9,2)], alpha = 0.7)) +
   ylab("") +
-  #xlim(0,60) +
+  #xlim(0,40) +
   xlab("% of STARR-seq peaks captured") +
   theme(legend.position = "bottom", legend.title = element_blank()) +
-  guides(fill = guide_legend(ncol = 1, reverse = FALSE)) +
-  theme(text = element_text(size = 15))
+  guides(fill = guide_legend(ncol = 2, reverse = FALSE)) +
+  theme(text = element_text(size = 12)) 
 ```
 
 
