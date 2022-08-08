@@ -82,28 +82,31 @@ alignDupSummary
 
 ### Without duplicates 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=3}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=4}
 fragLen = c()
 for(sample in sampleList){
   fragLen = read.table(paste0(datadir, "/alignment/sam/fragmentLen/", sample, "_rmDup_fragmentLen.txt"), header = FALSE) %>% mutate(fragLen = V1 %>% as.numeric, fragCount = V2 %>% as.numeric, Weight = as.numeric(V2)/sum(as.numeric(V2)), Sample = sample) %>% rbind(fragLen, .) 
 }
 
 fig1 = fragLen %>% ggplot(aes(x = Sample, y = fragLen, weight = Weight, fill = Sample)) +
-    theme_bw(base_size = 15) +
-    geom_violin(bw = 5) +
-    scale_y_continuous(breaks = seq(0, 800, 50)) +
-    ggpubr::rotate_x_text(angle = 20) +
-    ylab("Fragment Length") +
-    xlab("") +
-    theme(plot.margin = unit(c(0.5,0,0,2), "cm"))
+  theme_bw(base_size = 15) +
+  geom_violin(bw = 5) +
+  scale_y_continuous(breaks = seq(0, 800, 50)) +
+  ggpubr::rotate_x_text(angle = 20) +
+  ylab("Fragment Length") +
+  xlab("") +
+  theme(plot.margin = unit(c(0.5,0,0,2), "cm")) +
+  theme(legend.position = "bottom")
     
   
 fig2 = fragLen %>% ggplot(aes(x = fragLen, y = fragCount, color = Sample, group = Sample)) +
-    theme_bw(base_size = 15) +
-    geom_line(size = 1) +
-    xlab("Fragment Length") +
-    ylab("Count") +
-    coord_cartesian(xlim = c(0, 500)) 
+  theme_bw(base_size = 15) +
+  geom_line(size = 1) +
+  xlab("Fragment Length") +
+  ylab("Count") +
+  coord_cartesian(xlim = c(0, 500)) +
+  theme(legend.position = "bottom")
+
 
 ggarrange(fig1, fig2, ncol = 2)
 ```
@@ -111,7 +114,7 @@ ggarrange(fig1, fig2, ncol = 2)
 
 ### With duplicates 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=3}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=4}
 fragLen = c()
 for(sample in sampleList){
   fragLen = read.table(paste0(datadir, "/alignment/sam/fragmentLen/", sample, "_withDup_fragmentLen.txt"), header = FALSE) %>% mutate(fragLen = V1 %>% as.numeric, fragCount = V2 %>% as.numeric, Weight = as.numeric(V2)/sum(as.numeric(V2)), Sample = sample) %>% rbind(fragLen, .) 
@@ -124,7 +127,8 @@ fig3 = fragLen %>% ggplot(aes(x = Sample, y = fragLen, weight = Weight, fill = S
     ggpubr::rotate_x_text(angle = 20) +
     ylab("Fragment Length") +
     xlab("") +
-    theme(plot.margin = unit(c(0.5,0,0,2), "cm"))
+    theme(plot.margin = unit(c(0.5,0,0,2), "cm")) +
+    theme(legend.position = "bottom")
     
   
 fig4 = fragLen %>% ggplot(aes(x = fragLen, y = fragCount, color = Sample, group = Sample)) +
@@ -132,7 +136,8 @@ fig4 = fragLen %>% ggplot(aes(x = fragLen, y = fragCount, color = Sample, group 
     geom_line(size = 1) +
     xlab("Fragment Length") +
     ylab("Count") +
-    coord_cartesian(xlim = c(0, 500)) 
+    coord_cartesian(xlim = c(0, 500)) +
+    theme(legend.position = "bottom")
 
 ggarrange(fig3, fig4, ncol = 2)
 ```
@@ -380,21 +385,17 @@ FRiP_data
 ```
 
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
 FRiP_summary = FRiP_data[c("Sample", "SEACR_noDup_FRiP", "SEACR_withDup_FRiP", "MACS2_noDup_FRiP", "MACS2_withDup_FRiP", "ENCODE_H3K27ac_noDup_FRiP", "ENCODE_H3K27ac_withDup_FRiP", "ENCODE_H3K27me3_noDup_FRiP", "ENCODE_H3K27me3_withDup_FRiP")]
 FRiP_summary_melt = melt(FRiP_summary, id.vars = c("Sample"))
 
 FRiP_plot = ggplot(FRiP_summary_melt, aes(Sample, value)) +
-  theme_bw() +
+  theme_bw(base_size = 20) +
   geom_bar(aes(fill = variable), width = 0.6, position = position_dodge(width = 0.8), stat = "identity", colour = "black") +  
   ylim(0, 100) +
   ylab("% of fragments in peaks") +
   xlab("Sample") +
   ggtitle("Fragments in sample and ENCODE peaks") +
-  theme(axis.text = element_text(size = 20)) +
-  theme(axis.title = element_text(size = 20)) +
-  theme(plot.title = element_text(size = 30)) +
-  theme(legend.text = element_text(size = 20)) +
   theme(legend.title = element_blank()) +
   ggpubr::rotate_x_text(angle = 45) +
   theme(legend.position = "bottom") +
@@ -476,7 +477,7 @@ for(i in 1:length(sampleList_all_with_ENCODE)){
 
 ### All peaks
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=8, fig.height=8}
 DiffBind::dba.plotHeatmap(DBA_mixed, lhei = c(1,5), lwid = c(1,5), keysize = 0.75, cexRow = 1.25, cexCol = 1.25, margin = 20)
 ```
 
@@ -692,7 +693,7 @@ f_measure$F1 = f_measure$true_pos/(f_measure$true_pos + 0.5*(f_measure$false_pos
 ```
 
 
-```{r,fig.width=5, fig.height=4}
+```{r,fig.width=5, fig.height=5}
 f_measure_F1_SEACR_list = f_measure[c(seq(1, nrow(f_measure), by = 2)), 5] 
 f_measure_F1_MACS2_list = f_measure[c(seq(2, nrow(f_measure), by = 2)), 5]
 
@@ -717,11 +718,11 @@ F1_plot
 
 #### H3K27ac
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
 Percentage_of_CT_in_ENCODE_H3K27ac_summary_melt = melt(Percentage_of_CT_in_ENCODE_H3K27ac_summary, id.vars = "Sample")
 
 Peaks_in_ENCODE_plot = ggplot(Percentage_of_CT_in_ENCODE_H3K27ac_summary_melt, aes(Sample, value)) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
   ylab("% of peaks in ENCODE") +
@@ -729,10 +730,6 @@ Peaks_in_ENCODE_plot = ggplot(Percentage_of_CT_in_ENCODE_H3K27ac_summary_melt, a
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27ac") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
@@ -743,18 +740,13 @@ Peaks_in_ENCODE_plot
 Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary_melt = melt(Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary, id.vars = "Sample")
 
 Peaks_in_ENCODE_plot_withDup = ggplot(Percentage_of_CT_in_ENCODE_H3K27ac_withDup_summary_melt, aes(Sample, value)) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
   ylab("% of peaks in ENCODE") +
   xlab("") +
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27ac (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 15)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
@@ -823,11 +815,6 @@ Peaks_in_ENCODE_H3K27me3_plot = ggplot(Percentage_of_CT_in_ENCODE_H3K27me3_summa
   xlab("") +
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27me3") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
@@ -846,10 +833,6 @@ Peaks_in_ENCODE_H3K27me3_plot_withDup = ggplot(Percentage_of_CT_in_ENCODE_H3K27m
   ggtitle("Proportion of CUT&Tag peaks falling into ENCODE H3K27me3 (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 15)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) +
   theme(plot.margin = unit(c(1,1,1,1), "cm"))
@@ -862,22 +845,17 @@ Peaks_in_ENCODE_H3K27me3_plot_withDup
 
 #### H3K27ac
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
 Percentage_of_total_ENCODE_H3K27ac_summary_melt = melt(Percentage_of_total_ENCODE_H3K27ac_summary, id.vars = "Sample")
 
 ENCODE_in_CT_plot = ggplot(Percentage_of_total_ENCODE_H3K27ac_summary_melt, aes(Sample, value)) +
+  theme_bw(base_size = 15) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of ENCODE peaks captured") +
   xlab("Sample") +
   ggtitle("Proportion of ENCODE H3K27ac peaks captured by CUT&Tag") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) 
 
@@ -887,18 +865,13 @@ ENCODE_in_CT_plot
 Percentage_of_total_ENCODE_H3K27ac_withDup_summary_melt = melt(Percentage_of_total_ENCODE_H3K27ac_withDup_summary, id.vars = "Sample")
 
 ENCODE_in_CT_plot_withDup = ggplot(Percentage_of_total_ENCODE_H3K27ac_withDup_summary_melt, aes(Sample, value)) +
+    theme_bw(base_size = 15) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of ENCODE peaks captured") +
   xlab("Sample") +
   ggtitle("Proportion of ENCODE H3K27ac peaks captured by CUT&Tag (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2")) 
 
@@ -908,22 +881,17 @@ ENCODE_in_CT_plot_withDup
 
 #### H3K27me3
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=6, fig.height=6}
 Percentage_of_total_ENCODE_H3K27me3_summary_melt = melt(Percentage_of_total_ENCODE_H3K27me3_summary, id.vars = "Sample")
 
 ENCODE_in_CT_H3K27me3_plot = ggplot(Percentage_of_total_ENCODE_H3K27me3_summary_melt, aes(Sample, value)) +
+  theme_bw(base_size = 15) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of ENCODE peaks captured") +
   xlab("") +
   ggtitle("Proportion of ENCODE H3K27me3 peaks captured by CUT&Tag") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2"))
 
@@ -933,18 +901,13 @@ ENCODE_in_CT_H3K27me3_plot
 Percentage_of_total_ENCODE_H3K27me3_withDup_summary_melt = melt(Percentage_of_total_ENCODE_H3K27me3_withDup_summary, id.vars = "Sample")
 
 ENCODE_in_CT_H3K27me3_plot_withDup = ggplot(Percentage_of_total_ENCODE_H3K27me3_withDup_summary_melt, aes(Sample, value)) +
+  theme_bw(base_size = 15) +
   geom_bar(aes(fill = variable), width = 0.7, position = position_dodge(width = 0.75), stat = "identity", alpha = 0.7) +
   ylim(0, 100) +
-  theme_bw() +
   ylab("% of ENCODE peaks captured") +
   xlab("") +
   ggtitle("Proportion of ENCODE H3K27me3 peaks captured by CUT&Tag (with duplicates)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme(axis.text = element_text(size = 15)) +
-  theme(axis.title = element_text(size = 15)) +
-  theme(plot.title = element_text(size = 20)) +
-  theme(legend.text = element_text(size = 15)) +
-  theme(legend.title = element_text(size = 20)) +
   theme(legend.position = "bottom") +
   scale_fill_discrete(name = "Peak caller", labels = c("SEACR", "MACS2"))
 
@@ -1020,7 +983,7 @@ ggplot(matrix_melt) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(text = element_text(size = 25)) +
+  theme(text = element_text(size = 15)) +
   theme(legend.key.size = unit(1, "cm")) 
 ```
 
@@ -1056,7 +1019,7 @@ ggplot(matrix_melt) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(text = element_text(size = 25)) +
+  theme(text = element_text(size = 15)) +
   theme(legend.key.size = unit(1, "cm")) 
 ```
 
@@ -1079,7 +1042,7 @@ ggplot(matrix_melt) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(text = element_text(size = 25)) +
+  theme(text = element_text(size = 15)) +
   theme(legend.key.size = unit(1, "cm")) 
 ```
 
@@ -1102,7 +1065,7 @@ ggplot(matrix_melt) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(text = element_text(size = 25)) +
+  theme(text = element_text(size = 15)) +
   theme(legend.key.size = unit(1, "cm")) 
 ```
 
@@ -1124,7 +1087,7 @@ ggplot(matrix_melt) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(text = element_text(size = 25)) +
+  theme(text = element_text(size = 15)) +
   theme(legend.key.size = unit(1, "cm")) 
 ```
 
@@ -1146,7 +1109,7 @@ ggplot(matrix_melt) +
   ylab("") +
   scale_fill_viridis(option = "plasma") +
   ggpubr::rotate_x_text(angle = 45) +
-  theme(text = element_text(size = 25)) +
+  theme(text = element_text(size = 15)) +
   theme(legend.key.size = unit(1, "cm")) 
 ```
 
@@ -1243,9 +1206,7 @@ ggplot(matrix_melt) +
 
 ## ChIPseeker    {.tabset}
 
-### annoBar
-
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=5, fig.height=3}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=9, fig.height=3}
 peakAnnoList = lapply(peakList_with_ENCODE, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
 
 annobar = ChIPseeker::plotAnnoBar(peakAnnoList)
@@ -1259,7 +1220,7 @@ annobar
 
 ### KEGG
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=7, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=9, fig.height=10}
 peakAnnoList = lapply(peakList_with_ENCODE, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
 
 genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
@@ -1270,7 +1231,7 @@ compKEGG = clusterProfiler::compareCluster(geneCluster = genes,
                                            pAdjustMethod = "BH")
 
 KEGG_plot = clusterProfiler::dotplot(compKEGG, showCategory = 10, title = "KEGG Pathway Enrichment Analysis") +
-  theme_bw(base_size = 20) +
+  theme_bw(base_size = 13) +
   ggpubr::rotate_x_text(angle = 45) +
   theme(legend.key.size = unit(1.5, "cm")) +
   scale_size_area(max_size = 15)
@@ -1281,7 +1242,7 @@ KEGG_plot
 
 ### GO
 
-```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=7, fig.height=10}
+```{r, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=9, fig.height=10}
 peakAnnoList = lapply(peakList_with_ENCODE, annotatePeak, TxDb = TxDb.Hsapiens.UCSC.hg19.knownGene, tssRegion = c(-3000, 3000), verbose = FALSE)
 
 genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
@@ -1293,7 +1254,7 @@ compGO = clusterProfiler::compareCluster(geneCluster = genes,
                                            pAdjustMethod = "BH")
 
 GO_plot = clusterProfiler::dotplot(compGO, showCategory = 10, title = "GO Enrichment Analysis") +
-  theme_bw(base_size = 20) +
+  theme_bw(base_size = 13) +
   ggpubr::rotate_x_text(angle = 45) +
   theme(legend.key.size = unit(1.5, "cm")) +
   scale_size_area(max_size = 15)
@@ -1347,7 +1308,7 @@ clusterProfiler::dotplot(ReactomePA_comp, showCategory = 10) +
 
 # Motifs
 
-```{r}
+```{r, warning=FALSE}
 motifs = list()
 
 for(i in 1:length(sampleList_all_with_ENCODE)){
@@ -1366,7 +1327,7 @@ for(i in 1:length(sampleList_all_with_ENCODE)){
 
 ## By motif family
 
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=4, fig.height=12}
+```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=15, fig.height=12}
 tbl_summaries = list()
 for(i in 1:length(sampleList_all_with_ENCODE)){
   motifs[[i]]$Sample = sampleList_all_with_ENCODE[i]
@@ -1390,7 +1351,7 @@ tbl_results %>% ggplot(aes(x = Sample, y = motif_family, fill = top_log_p_value)
 
 ## All motifs
 
-```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=4, fig.height=12}
+```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, fig.width=15, fig.height=12}
 motif_summary = c()
 
 # collect top 15 motifs
@@ -1565,7 +1526,7 @@ STARRseq_qvals_df_melt = melt(STARRseq_qvals_df, id.vars = c("Sample", "Captured
 ```
 
 
-```{r, fig.height=3, fig.width=5}
+```{r, fig.height=5, fig.width=7}
 ggplot(STARRseq_qvals_df_melt, aes(x = value, y = Sample, fill = Captured)) + 
   theme_bw() +
   stat_boxplot(geom = "errorbar", coef = 1.5) + 
@@ -1618,7 +1579,7 @@ STARRseq_filt_qvals_df_melt = melt(STARRseq_filt_qvals_df, id.vars = c("Sample",
 ```
 
 
-```{r, fig.height=3, fig.width=5}
+```{r, fig.height=5, fig.width=7}
 ggplot(STARRseq_filt_qvals_df_melt, aes(x = value, y = Sample, fill = Captured)) + 
   theme_bw() +
   stat_boxplot(geom = "errorbar", coef = 1.5) + 
@@ -1756,7 +1717,7 @@ STARRseq_capture_summary_filt
 ```
 
 
-```{r, fig.height=2.5, fig.width=3.5}
+```{r, fig.height=5, fig.width=7}
 STARRseq_capture_summary_melt = melt(STARRseq_capture_summary)
 STARRseq_capture_summary_melt$Sample = factor(STARRseq_capture_summary_melt$Sample, levels = unique(STARRseq_capture_summary_melt$Sample))
 
@@ -1773,7 +1734,7 @@ ggplot(STARRseq_capture_summary_melt, aes(y = Sample, x = value, fill = variable
 ```
 
 
-```{r, fig.height=2.5, fig.width=3.5}
+```{r, fig.height=5, fig.width=7}
 STARRseq_capture_summary_filt_melt = melt(STARRseq_capture_summary_filt)
 STARRseq_capture_summary_filt_melt$Sample = factor(STARRseq_capture_summary_filt_melt$Sample, levels = unique(STARRseq_capture_summary_filt_melt$Sample))
 
