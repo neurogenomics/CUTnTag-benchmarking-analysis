@@ -6,9 +6,6 @@ source activate deepenv
 
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
 blacklist="/rds/general/user/la420/home/hg19/other/hg19-blacklist.v2.bed.gz"
-plotHeatmap="$HOME/anaconda3/envs/deepenv/bin/plotHeatmap"
-computeMatrix="$HOME/anaconda3/envs/deepenv/bin/computeMatrix"
-
 cores=8
 
 sample_1="Diagenode_C15410196_1_50_2M"

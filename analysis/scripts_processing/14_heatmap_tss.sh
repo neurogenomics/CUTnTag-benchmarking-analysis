@@ -5,8 +5,6 @@ module load anaconda3/personal
 source activate deepenv
 
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
-plotHeatmap="$HOME/anaconda3/envs/deepenv/bin/plotHeatmap"
-computeMatrix="$HOME/anaconda3/envs/deepenv/bin/computeMatrix"
 cores=32
 
 sample_1="Diagenode_C15410196_1_50_2M"

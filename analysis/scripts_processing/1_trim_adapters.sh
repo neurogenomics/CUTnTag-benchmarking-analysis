@@ -8,16 +8,11 @@ source activate cutadaptenv
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
 trimgalore_path="/rds/general/user/la420/home/TrimGalore-0.6.6"
 
-sample_name="Abcam-ab4729_1_100"
-#sample_name="Diagenode_C15410196_1_50"
+sample_name="Diagenode_C15410196_1_50"
 #sample_name="CST9733_1_100_H3K27me3"
 
 
-# may need to run on gunzipped fastq files to avoid bad gzip error
-$trimgalore_path/trim_galore -o $root_dir/fastq/trimmed \
---gzip \
---basename $sample_name \
---paired \
-$root_dir/fastq/${sample_name}_R1.fastq \
-$root_dir/fastq/${sample_name}_R2.fastq
+# may need to gunzip to avoid bad gzip error
+$trimgalore_path/trim_galore -o $root_dir/fastq/trimmed --gzip --basename $sample_name --paired $root_dir/fastq/${sample_name}_R1.fastq $root_dir/fastq/${sample_name}_R2.fastq
+
 

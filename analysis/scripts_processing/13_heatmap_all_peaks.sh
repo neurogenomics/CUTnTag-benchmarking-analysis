@@ -5,8 +5,6 @@ module load anaconda3/personal
 source activate deepenv
 
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
-plotHeatmap="$HOME/anaconda3/envs/deepenv/bin/plotHeatmap"
-computeMatrix="$HOME/anaconda3/envs/deepenv/bin/computeMatrix"
 cores=8
 
 sample_name="Diagenode_C15410196_1_50_2M"
@@ -24,12 +22,12 @@ plotHeatmap --colorMap magma -m $root_dir/heatmap/peak_summits/${sample_name}_on
 
 
 # MACS2
-#computeMatrix reference-point -S $root_dir/heatmap/bigwig/${sample_name}_one_mate_raw.bw -R $root_dir/peakCalling/MACS2/${sample_name}_rmDup_q1e-5_summits.bed --skipZeros -o $root_dir/heatmap/peak_summits/${sample_name}_one_mate_MACS2.mat.gz -p $cores -a 3000 -b 3000 --referencePoint center
+computeMatrix reference-point -S $root_dir/heatmap/bigwig/${sample_name}_one_mate_raw.bw -R $root_dir/peakCalling/MACS2/${sample_name}_rmDup_q1e-5_summits.bed --skipZeros -o $root_dir/heatmap/peak_summits/${sample_name}_one_mate_MACS2.mat.gz -p $cores -a 3000 -b 3000 --referencePoint center
 
-#plotHeatmap --colorMap magma -m $root_dir/heatmap/peak_summits/${sample_name}_one_mate_MACS2.mat.gz -out $root_dir/heatmap/peak_summits/${sample_name}_one_mate_MACS2_heatmap.png --sortUsing sum --startLabel "Peak Start" --endLabel "Peak End" --xAxisLabel "" --regionsLabel "Peaks" --samplesLabel ${sample_name}
+plotHeatmap --colorMap magma -m $root_dir/heatmap/peak_summits/${sample_name}_one_mate_MACS2.mat.gz -out $root_dir/heatmap/peak_summits/${sample_name}_one_mate_MACS2_heatmap.png --sortUsing sum --startLabel "Peak Start" --endLabel "Peak End" --xAxisLabel "" --regionsLabel "Peaks" --samplesLabel ${sample_name}
 
 
 # ENCODE
-#computeMatrix reference-point -S $root_dir/resources/ENCODE/bigwig/H3K27ac_ENCSR000AKP_ds_raw.bw -R $root_dir/resources/ENCODE/peaks/H3K27ac_ENCSR000AKP_2M_summits.bed --skipZeros -o $root_dir/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_MACS2.mat.gz -p $cores -a 3000 -b 3000 --referencePoint center
+computeMatrix reference-point -S $root_dir/resources/ENCODE/bigwig/H3K27ac_ENCSR000AKP_ds_raw.bw -R $root_dir/resources/ENCODE/peaks/H3K27ac_ENCSR000AKP_2M_summits.bed --skipZeros -o $root_dir/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_MACS2.mat.gz -p $cores -a 3000 -b 3000 --referencePoint center
 
-#plotHeatmap --colorMap magma -m $root_dir/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_MACS2.mat.gz -out $root_dir/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_MACS2_heatmap.png --sortUsing sum --startLabel "Peak Start" --endLabel "Peak End" --xAxisLabel "" --regionsLabel "Peaks" --samplesLabel "ENCODE_H3K27ac"
+plotHeatmap --colorMap magma -m $root_dir/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_MACS2.mat.gz -out $root_dir/heatmap/peak_summits/H3K27ac_ENCSR000AKP_2M_MACS2_heatmap.png --sortUsing sum --startLabel "Peak Start" --endLabel "Peak End" --xAxisLabel "" --regionsLabel "Peaks" --samplesLabel "ENCODE_H3K27ac"

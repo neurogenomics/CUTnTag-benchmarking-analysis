@@ -1,0 +1,1 @@
+cmd = /rds/general/user/la420/home/CUTnTAG/antibodies/all_peaks/ENCODE/H3K27ac_ENCFF044JNJ.bed.narrowPeak hg19 /rds/general/user/la420/home/CUTnTAG/antibodies/motifs/ENCODE_H3K27ac_1000 -size 1000

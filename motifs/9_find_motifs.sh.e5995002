@@ -1,6 +1,0 @@
-
-	Position file = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/SEACR/CST9733_1_100_H3K27me3_rmDup_seacr_top0.01_peaks.stringent.bed
-	Genome = hg19
-	Output Directory = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/motifs/SEACR/CST9733_1_100_H3K27me3
-	Fragment size set to 1000
-!!! Could not open peak/position file /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/SEACR/CST9733_1_100_H3K27me3_rmDup_seacr_top0.01_peaks.stringent.bed !!!

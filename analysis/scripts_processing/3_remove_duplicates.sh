@@ -7,8 +7,7 @@ root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n
 temp_dir="${root_dir}/removeDuplicate/temp"
 picard_command="java -Xmx12G -XX:ParallelGCThreads=5 -XX:GCTimeLimit=50 -jar /apps/picard/2.6.0/picard.jar"
 
-sample_name="Abcam-ab4729_1_100"
-#sample_name="Diagenode_C15410196_1_50"
+sample_name="Diagenode_C15410196_1_50"
 #sample_name="CST9733_1_100_H3K27me3"
 
 

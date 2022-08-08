@@ -8,8 +8,7 @@ outdir="${root_dir}/alignment/sam"
 ref="/rds/general/user/la420/home/hg19/index/genome"
 cores=8
 
-sample_name="Abcam-ab4729_1_100"
-#sample_name="Diagenode_C15410196_1_50"
+sample_name="Diagenode_C15410196_1_50"
 #sample_name="CST9733_1_100_H3K27me3"
 
 
@@ -26,4 +25,5 @@ bowtie2 \
 -1 ${root_dir}/fastq/trimmed/${sample_name}_val_1.fq.gz \
 -2 ${root_dir}/fastq/trimmed/${sample_name}_val_2.fq.gz \
 -S ${outdir}/${sample_name}_trimmed_bowtie2.sam &> ${outdir}/bowtie2_summary/${sample_name}_bowtie2.txt
+
 

@@ -1,6 +1,0 @@
-
-	Position file = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/MACS2/CST9733_1_100_H3K27me3_rmDup_q1e-5_peaks.narrowPeak
-	Genome = hg19
-	Output Directory = /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/motifs/MACS2/CST9733_1_100_H3K27me3
-	Fragment size set to 1000
-!!! Could not open peak/position file /rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data/peakCalling/MACS2/CST9733_1_100_H3K27me3_rmDup_q1e-5_peaks.narrowPeak !!!

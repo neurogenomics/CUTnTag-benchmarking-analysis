@@ -1,9 +1,9 @@
 # CUT&Tag benchmarking and analysis
 
-This repository holds code used to carry out benchmarking and analysis of CUT&Tag against ENCODE ChIP-seq, as shown in our preprint ("CUT&Tag recovers up to half of ENCODE ChIP-seq peaks"; doi: https://doi.org/10.1101/2022.03.30.486382).  
+This repository holds code used to carry out processing, benchmarking and analysis of CUT&Tag against ENCODE ChIP-seq, as shown in our preprint ("CUT&Tag recovers up to half of ENCODE ChIP-seq peaks"; doi: https://doi.org/10.1101/2022.03.30.486382).  
 
 The analysis consists of two main parts:
-1) Pre-processing (adapter trimming, alignment, peak calling, etc.) using Linux command line scripts
+1) Pre-processing (adapter trimming, alignment, peak calling, etc.) and a few additional analyses (e.g. heatmap generation) using Linux command line scripts
 2) Downstream processing in R
 
 This demo was carried out on two real samples, Diagenode C15410196 (1:50) and CST9733, starting from fastq files. These files are too large to be hosted here but can be downloaded from the European Nucleotide Archive (sample accessions SAMN27024067 and SAMN27024069, respectively). All code required for processing and analysis is enclosed, and presented in a defined order where appropriate. Other outputs and smaller intermediate files have also been included where possible. The scripts assume a particular directory structure but note that base paths will need to be amended. A complete analysis may take up to 20 hours, depending on available resources and file sizes.  
@@ -36,7 +36,7 @@ The following R packages were used:
 - BRGenomics (version 1.1.3)
 - marge (version 0.0.4.9999)
 
-Required R packages can also be found in the session information provided in the html file with downstream analysis. Note that this analysis pipeline is now available in the form of the EpiCompare R package (https://github.com/neurogenomics/EpiCompare).
+Required R packages can also be found in the session information provided in the html file with downstream analysis. Note that this pipeline is now available in the form of the EpiCompare R package (https://github.com/neurogenomics/EpiCompare).
 
 
 ### References

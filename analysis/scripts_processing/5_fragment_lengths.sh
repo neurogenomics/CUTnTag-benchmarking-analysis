@@ -5,8 +5,7 @@ module load samtools/1.3.1
 
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
 
-sample_name="Abcam-ab4729_1_100"
-#sample_name="Diagenode_C15410196_1_50"
+sample_name="Diagenode_C15410196_1_50"
 #sample_name="CST9733_1_100_H3K27me3"
 
 

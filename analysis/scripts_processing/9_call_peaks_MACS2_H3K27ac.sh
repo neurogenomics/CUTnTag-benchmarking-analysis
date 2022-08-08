@@ -5,19 +5,16 @@ module load samtools/1.3.1
 
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
 
-sample_name="Abcam-ab4729_1_100"
-#sample_name="Diagenode_C15410196_1_50"
-#sample_name="Abcam-ab4729_1_100_2M"
+sample_name="Diagenode_C15410196_1_50"
 #sample_name="Diagenode_C15410196_1_50_2M"
 
 
 # ensure bam files are sorted by coordinate and indexed for peak calling with MACS2
-samtools sort -o $root_dir/alignment/bam/${sample_name}_rmDup.sorted.bam $root_dir/alignment/bam/${sample_name}_rmDup_bowtie2.mapped.bam
-samtools index $root_dir/alignment/bam/${sample_name}_rmDup.sorted.bam
+#samtools sort -o $root_dir/alignment/bam/${sample_name}_rmDup.sorted.bam $root_dir/alignment/bam/${sample_name}_rmDup_bowtie2.mapped.bam
+#samtools index $root_dir/alignment/bam/${sample_name}_rmDup.sorted.bam
 
 samtools sort -o $root_dir/alignment/bam/${sample_name}_withDup.sorted.bam $root_dir/alignment/bam/${sample_name}_withDup_bowtie2.mapped.bam
 samtools index $root_dir/alignment/bam/${sample_name}_withDup.sorted.bam
-
 
 
 
@@ -28,15 +25,15 @@ source activate macs2_env
 threshold="1e-5"
 
 
-macs2 callpeak -t ${root_dir}/alignment/bam/${sample_name}_rmDup.sorted.bam \
--f BAMPE \
--g hs \
--q ${threshold} \
---keep-dup all \
-–-nolambda \
---nomodel \
---outdir ${root_dir}/peakCalling/MACS2 \
--n ${sample_name}_rmDup_q${threshold}
+#macs2 callpeak -t ${root_dir}/alignment/bam/${sample_name}_rmDup.sorted.bam \
+#-f BAMPE \
+#-g hs \
+#-q ${threshold} \
+#--keep-dup all \
+#--nolambda \
+#--nomodel \
+#--outdir ${root_dir}/peakCalling/MACS2 \
+#-n ${sample_name}_rmDup_q${threshold}
 
 
 macs2 callpeak -t ${root_dir}/alignment/bam/${sample_name}_withDup.sorted.bam \
@@ -44,7 +41,7 @@ macs2 callpeak -t ${root_dir}/alignment/bam/${sample_name}_withDup.sorted.bam \
 -g hs \
 -q ${threshold} \
 --keep-dup all \
-–-nolambda \
+--nolambda \
 --nomodel \
 --outdir ${root_dir}/peakCalling/MACS2 \
 -n ${sample_name}_withDup_q${threshold}

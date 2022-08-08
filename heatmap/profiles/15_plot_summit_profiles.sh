@@ -5,9 +5,7 @@ module load anaconda3/personal
 source activate deepenv
 
 root_dir="/rds/general/user/la420/projects/neurogenomics-lab/live/Projects/CUT_n_TAG/test_data"
-blacklist="/rds/general/user/la420/home/hg19/other/hg19-blacklist.v2.bed.gz"
-plotHeatmap="$HOME/anaconda3/envs/deepenv/bin/plotHeatmap"
-computeMatrix="$HOME/anaconda3/envs/deepenv/bin/computeMatrix"
+blacklist="${root_dir}/resources/hg19/hg19-blacklist.v2.bed.gz"
 
 cores=8
 
